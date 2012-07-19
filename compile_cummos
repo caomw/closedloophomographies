@@ -1,0 +1,3 @@
+#!/bin/bash
+g++ mosaic_from_cum.cpp homography.cpp `pkg-config --cflags opencv --libs opencv` -o moscum
+

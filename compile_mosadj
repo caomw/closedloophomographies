@@ -1,0 +1,2 @@
+#!/bin/bash
+g++ mosaic_adjust.cpp homography.cpp `pkg-config --cflags opencv --libs opencv` -o mosadj

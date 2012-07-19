@@ -1,0 +1,2 @@
+#!/bin/bash
+g++ detect_overlap.cpp homography_custom.cpp `pkg-config --cflags opencv --libs opencv` -o detectoverlap

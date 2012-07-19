@@ -1,0 +1,2 @@
+#!/bin/bash
+g++ videotoimgs.cpp `pkg-config --cflags opencv --libs opencv` -o videotoimgs

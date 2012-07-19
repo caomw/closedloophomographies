@@ -1,0 +1,2 @@
+#!/bin/bash
+g++ calculate_cumulative_homographies.cpp homography_custom.cpp `pkg-config --cflags opencv --libs opencv` -o calcumhom
