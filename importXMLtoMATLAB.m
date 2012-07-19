@@ -20,5 +20,6 @@ for r = 1:rows
    end
 end
 
+format longE
 disp(matrix)
 end
