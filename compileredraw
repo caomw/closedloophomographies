@@ -1,0 +1,2 @@
+#!/bin/bash
+g++ redrawwithoptimizedhomogs.cpp homography.cpp `pkg-config --cflags opencv --libs opencv` -o redraw
