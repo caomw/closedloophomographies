@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<homografia0010 type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>f</dt>
+  <data>
+    9.65744317e-01 -1.47358879e-01 2.64643612e+01 1.26935363e-01
+    9.56318438e-01 2.83380947e+01 -5.34558203e-05 -1.81607029e-05 1.</data></homografia0010>
+</opencv_storage>
