@@ -45,7 +45,6 @@ int main(int argc, const char* argv[])
     CvMat* H_old = cvCreateMat(3, 3, CV_32FC1);
     cvSetIdentity(H_old);
     IplImage* imgColorRecomp = cvCreateImage(cvSize(imgWidth, imgHeight), IPL_DEPTH_8U, 3);//cvLoadImage(filename); 
-    IplImage* imgBWRecomp = cvCreateImage(cvSize(imgWidth, imgHeight), IPL_DEPTH_8U, 1);
 
     char filename[200];
 
@@ -69,10 +68,12 @@ int main(int argc, const char* argv[])
         //load the image
         sprintf(filename, "%s/mosaico%04d.tif", test_set_name, i);
         imgColorRecomp = cvLoadImage(filename);
-        cvCvtColor(imgColorRecomp, imgBWRecomp, CV_BGR2GRAY);
 
         drawMosaic3(mosaic_recomp, imgColorRecomp, H_all, H_old, 3, 0, 0, 0);
         cvShowImage("recomputed_mosaic", mosaic_recomp->imgDoble);
+
+        sprintf(filename, "%s/cummosaic%04d.tif", test_name, i);
+        cvSaveImage(filename, mosaic_recomp->imgDoble);
 
         cvCopy(H_all, H_old, NULL);    
         
@@ -86,6 +87,5 @@ int main(int argc, const char* argv[])
     cvReleaseMat(&H_cum);
     cvReleaseMat(&H_recomp_old);
     cvReleaseImage(&imgColorRecomp);
-    cvReleaseImage(&imgBWRecomp); 
     return 0;
 }

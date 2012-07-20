@@ -265,6 +265,7 @@ int drawMosaic3(MOSAIC *mosaic,IplImage* img0,CvMat* Hall,CvMat* Hold,int  chann
                 printf("sizechange\n");
 
 
+//            printf("i = %d, j = %d, x = %f, y = %f, z = %f\n", i, j, x, y, z);
 
                 if ((int(x)<0) || (int(x)>mosaic->imgDoble->width))
                 {
