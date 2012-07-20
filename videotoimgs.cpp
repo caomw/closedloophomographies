@@ -22,7 +22,7 @@ int main(int argc, const char* argv[])
     IplImage* imgToSave = cvCreateImage(cvSize(600, 450), IPL_DEPTH_8U, 3);
     char filename[200];
     int imgnum = 1;
-    CvCapture *capture = cvCaptureFromFile("test_set_15/MVI_0741.AVI");
+    CvCapture *capture = cvCaptureFromFile("test_set_16/MVI_0763.AVI");
     double totalvideoframes= cvGetCaptureProperty( capture, CV_CAP_PROP_FRAME_COUNT );
     int frameI=(int)(totalvideoframes*((double)(frameI)/100));
     int frameF=totalvideoframes-1;
@@ -40,6 +40,7 @@ int main(int argc, const char* argv[])
             cvResize(imgCaptured, imgToSave);
             sprintf(filename, "%s/mosaico%04d.tif", test_set_name, imgnum);
             cvSaveImage(filename, imgToSave);
+            printf("saving %s \n", filename);
             imgnum++;
         }
 

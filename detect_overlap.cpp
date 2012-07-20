@@ -29,10 +29,10 @@ int main(int argc, const char* argv[])
     MOSAIC *mosaic;
     mosaic = new(MOSAIC);
     
-    mosaic->finalsizex=3;
-    mosaic->finalsizey=3;
-    mosaic->levelx=1;
-    mosaic->levely=1;
+    mosaic->finalsizex=6;
+    mosaic->finalsizey=6;
+    mosaic->levelx=2;
+    mosaic->levely=2;
     mosaic->imgDoble = cvCreateImage( cvSize(mosaic->finalsizex*imgWidth,mosaic->finalsizey*imgHeight), 8, 3);
     mosaic->imgDobleLast = cvCreateImage( cvSize(mosaic->finalsizex*imgWidth,mosaic->finalsizey*imgHeight), 8, 3);
 
@@ -170,7 +170,7 @@ int main(int argc, const char* argv[])
 
         //look for closed loop  
         switch(detecttype){
-            case 1: // decomposition of matrix (... this is probably actually yielding the wrong 'translation' ...)
+            case 1: 
                 // make submatrices 
                 //cvGetSubRect(H_all, KR, cvRect(0, 0, 2, 2));
                 cvGetSubRect(H, KR, cvRect(0, 0, 2, 2));
@@ -324,6 +324,7 @@ int main(int argc, const char* argv[])
             }
         
             double detHoverlap = cvDet(Hoverlap);
+            printf("detHoverlap = %f\n", detHoverlap);
 
             if (fabs(detHoverlap - 1.0) < 0.20)
             {
