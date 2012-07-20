@@ -4,7 +4,7 @@ if nargin < 2
     options = optimset('Algorithm', 'sqp');
 end
 
-[x fval] = fmincon(@objectiveh16istruth, x0, [], [], [], [], [], [], @lineareq, options); %FIX THIS TO BE MORE ACCURATE
+[x fval] = fmincon(@objectiveh16istruth, x0, [], [], [], [], [], [], @nonlinearconst, options);
 
 function f = objectiveh16istruth(xin)
 h16 = importXMLtoMATLAB('testset9test2/homografia_new0006.xml');
@@ -20,6 +20,16 @@ f = abs(xcum(1, 1) - h16(1, 1)) + abs(xcum(1, 2) - h16(1, 2)) + ...
     abs(xcum(3, 1) - h16(3, 1)) + abs(xcum(3, 2) - h16(3, 2)) + ...
     abs(xcum(3, 3) - h16(3, 3)); 
 
-function [c, ceq] = lineareq(x)
-ceq = x(1) + x(2) - 9;
-c = [];
+function [c, ceq] = nonlinearconst(x)
+detthresh = 0.2;
+x12 = [x(1), x(2), x(3); x(4), x(5), x(6); x(7), x(8), 1];
+x23 = [x(9), x(10), x(11); x(12), x(13), x(14); x(15), x(16), 1];
+x34 = [x(17), x(18), x(19); x(20), x(21), x(22); x(23), x(24), 1];
+x45 = [x(25), x(26), x(27); x(28), x(29), x(30); x(31), x(32), 1];
+x56 = [x(33), x(34), x(35); x(36), x(37), x(38); x(39), x(40), 1];
+ceq = [];
+c(1) = abs(det(x12) - 1) - detthresh;
+c(2) = abs(det(x23) - 1) - detthresh;
+c(3) = abs(det(x34) - 1) - detthresh;
+c(4) = abs(det(x45) - 1) - detthresh;
+c(5) = abs(det(x56) - 1) - detthresh;

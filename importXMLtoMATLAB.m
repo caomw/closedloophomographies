@@ -21,5 +21,5 @@ for r = 1:rows
 end
 
 format longE
-disp(matrix)
+%disp(matrix)
 end
