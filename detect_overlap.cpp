@@ -365,17 +365,19 @@ int main(int argc, const char* argv[])
         drawMosaic3(mosaic, imgColor, H_all, H_old, 3, 0, 0, 0);
         //draw translation centers 
         //cvCircle(mosaic->imgDoble, cvPoint(0, 0), 5, CV_RGB(0, 0, 255), 2);
-        cvCircle(mosaic->imgDoble, cvPoint(centerX, centerY), 5, CV_RGB(255, 0, 0), 2);       
-        for (int i = 0; i <= cur_img - firstimgnum; i++)
-        {
-//            printf("x = %d, y = %d\n", rtvecs[i].x, rtvecs[i].y);
-            cvCircle(mosaic->imgDoble, cvPoint(centerX - cvRound(rtvecs[i].x), centerY - cvRound(rtvecs[i].y)), 5, CV_RGB(0, 255, 0), 2);
-        }
+        
+        
+//        cvCircle(mosaic->imgDoble, cvPoint(centerX, centerY), 5, CV_RGB(255, 0, 0), 2);       
+//        for (int i = 0; i <= cur_img - firstimgnum; i++)
+//        {
+////            printf("x = %d, y = %d\n", rtvecs[i].x, rtvecs[i].y);
+//            cvCircle(mosaic->imgDoble, cvPoint(centerX - cvRound(rtvecs[i].x), centerY - cvRound(rtvecs[i].y)), 5, CV_RGB(0, 255, 0), 2);
+//        }
 
         cvShowImage("mosaic", mosaic->imgDoble); 
 
-//        sprintf(filename, "%s/regmos%04d.tif", test_name, cur_img);
-//        cvSaveImage(filename, mosaic->imgDoble);
+        sprintf(filename, "%s/regmos%04d.tif", test_set_name, cur_img);
+        cvSaveImage(filename, mosaic->imgDoble);
 
         cvCopy(H_all, H_old, NULL);
        

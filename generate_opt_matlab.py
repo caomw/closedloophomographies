@@ -56,9 +56,13 @@ def main():
         print ('c(' + str(counter) + ':' + str(counter + 1) + 
              ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 1, 'twoi': 8*i + 2}
         counter += 2
+        print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthresh;') % {'onei': 8*i + 3}
+        counter += 1
         print ('c(' + str(counter) + ':' + str(counter + 1) + 
              ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 4, 'twoi': 8*i + 5}
         counter += 2
+        print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthresh;') % {'onei': 8*i + 6}
+        counter += 1
         print ('c(' + str(counter) + ':' + str(counter + 1) + 
              ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - smallsmallthresh;') % {'onei': 8*i + 7, 'twoi': 8*i + 8}
         counter += 2

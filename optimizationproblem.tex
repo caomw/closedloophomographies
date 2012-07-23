@@ -1,0 +1,93 @@
+\documentclass{article}
+\usepackage{amsmath, amssymb, amsthm, enumerate}
+
+\begin{document} 
+
+This is the problem formulation for the optimization problem in closed-loop
+homographies.
+
+There is a closed loop detected between image $1$ and image $n$. Each
+homography computed by the mosaicing algorithm, $H_{i, i + 1}$, is the
+homograhy from image $i$ to the next image $i + 1$, computed using OpenCV (and
+RANSAC). Once the closed loop is detected, the homography $H_{1, n}$ is
+computed between image $1$ and the overlap image $n$. 
+
+Overall, the goal of the optimization algorithm is to minimize the error
+between
+ 
+\[H_{1, 2} \cdot H_{2, 3} \cdots H_{n - 2, n - 1} \cdot H_{n - 1, n} - H_{1, n} = 0\]
+
+which can be written as
+
+\[H_{1, n}^{\textnormal{cumulative}} - H_{1, n} = 0.\]
+
+Using a scalar formulation of the problem, the error is calculated by
+calculating the sum of the absolute values of the differences between the
+cumulative and new homographies for each component in the matrix.
+
+\[\sum_{i,j} |(H_{1, n}^{\textnormal{cumulative}})_{ij} - (H_{1, n})_{ij}|.\]
+
+The variables given to the optimizer are the $8$ parameters in each of the
+matrices $H_{i, i + 1}$ (each entry of the homography matrix except for the $3,
+3$ entry, which is assumed to be $1$. The values of the $H_{1, n}$ matrix are
+not variables in the optimization function, but are taken as truth.
+\footnote{It is possible to use the components of the closed-loop matrix as
+variables too, but for now I've implemented the code to consider it as truth. I
+will try using those components as variables as well.} The optimizer will yield
+$n$ new homography matrices $H_{i, i+1}^{\textnormal{optimized}}$. 
+
+The optimizer tries to minimize this nonlinear multivariable function according
+to the following constrants:
+
+\begin{enumerate}
+
+\item The new matrices that are computed must be homography matrices (i.e.
+still have determinant close to $1$).
+
+\[|\det(H_{i, i+1}) - 1| \leq \textnormal{determinant\_threshold } \forall i \in (1, n-1)\] 
+
+\item The variables in each matrix can't change ``too much.'' There are a few
+ways to implement this:
+
+\begin{enumerate}
+
+\item \label{indiv_thresh} The individual variables can only change within a certain range (with
+this range being different depending on which component in the homography it
+is):
+
+\[|(H_{i, i+1})_{1, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 1}| \leq \textnormal{change\_threshold}\] 
+\[|(H_{i, i+1})_{1, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 2}| \leq \textnormal{change\_threshold}\] 
+\[|(H_{i, i+1})_{2, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 1}| \leq \textnormal{change\_threshold}\] 
+\[|(H_{i, i+1})_{2, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 2}| \leq \textnormal{change\_threshold}\] 
+\[|(H_{i, i+1})_{3, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 1}| \leq \textnormal{pixel\_threshold}\] 
+\[|(H_{i, i+1})_{3, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 2}| \leq \textnormal{pixel\_threshold}\] 
+\[|(H_{i, i+1})_{1, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 3}| \leq \textnormal{small\_threshold}\] 
+\[|(H_{i, i+1})_{2, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 3}| \leq \textnormal{small\_threshold}\] 
+
+The reason each entry (or group of entries) should have it`s own threshold is
+that each component of the homography matrix is related to a different
+transformation and has different similarity tolerances. 
+
+\item The total change in all the variables of a particular matrix can`t exceed a certain value.
+
+\[|\sum_{i, j} (H_{k, k+1})_{i, j}| \leq \textnormal{sum\_thresh}\]
+
+I don`t like this way because it does not account for two very large changes in
+two variables - i.e. if component $(1, 1)$ changes by $-100$ and component $(3,
+3)$ changes by $+99$, it seems that there wasn't that much change in total
+whereas in reality the new homography matrix is very different from the old
+homography matrix.
+
+\end{enumerate} 
+
+Right now my code uses the \ref{indiv_thresh} metric of ``too much change.''
+
+\item The $3, 3$ entry of all the intermediate homographies computed with
+$H^{\textnormal{optimized}}$ cannot be very different from $1$.
+
+\[\textnormal{Let } H_{1, k}^{\textnormal{optimized}} = H_{1, 2}^{\textnormal{optimized}} \cdots H_{k - 1, k}^{\textnormal{optimized}}\]
+\[|(H_{1, k}^{\textnormal{optimized}})_{3, 3} - 1| \leq \textnormal{entry33\_threshold } \forall k \in (2, n)\]
+
+\end{enumerate}
+
+\end{document}

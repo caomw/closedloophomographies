@@ -1,5 +1,5 @@
 function [x x0] = runtest(testset, test_name, detthresh, changethresh,...
-    entry33thresh, smallsmallthresh)
+    entry33thresh, smallsmallthresh, transthresh)
 
 runtest15loop;
 
@@ -42,7 +42,7 @@ h1415vec = reshape(h1415', 9, 1);
 h1516vec = reshape(h1516', 9, 1);
 x0 = [h0102vec(1:8); h0203vec(1:8); h0304vec(1:8); h0405vec(1:8); h0506vec(1:8); h0607vec(1:8); h0708vec(1:8); h0809vec(1:8); h0910vec(1:8); h1011vec(1:8); h1112vec(1:8); h1213vec(1:8); h1314vec(1:8); h1415vec(1:8); h1516vec(1:8)];
 [x val] = callObjConstr(x0, h0116, detthresh, changethresh, ... 
- entry33thresh, smallsmallthresh);
+ entry33thresh, smallsmallthresh, transthresh);
 vecToOpenCVXML(x, test_name)
 end
 

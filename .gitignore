@@ -13,3 +13,7 @@
 
 # scratch Mathematica file
 scratch.nb
+
+#LateX for-compiler things
+*.aux
+*.log
