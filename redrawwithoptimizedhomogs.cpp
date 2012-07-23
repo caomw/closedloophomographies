@@ -30,10 +30,10 @@ int main(int argc, const char* argv[])
     MOSAIC *mosaic_recomp;
     mosaic_recomp = new(MOSAIC);
     
-    mosaic_recomp->finalsizex=3;
-    mosaic_recomp->finalsizey=3;
-    mosaic_recomp->levelx=1;
-    mosaic_recomp->levely=1;
+    mosaic_recomp->finalsizex=6;
+    mosaic_recomp->finalsizey=6;
+    mosaic_recomp->levelx=2;
+    mosaic_recomp->levely=2;
     mosaic_recomp->imgDoble = cvCreateImage( cvSize(mosaic_recomp->finalsizex*imgWidth,mosaic_recomp->finalsizey*imgHeight), 8, 3);
     mosaic_recomp->imgDobleLast = cvCreateImage( cvSize(mosaic_recomp->finalsizex*imgWidth,mosaic_recomp->finalsizey*imgHeight), 8, 3);
 

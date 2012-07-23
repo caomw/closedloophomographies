@@ -1,11 +1,12 @@
 function [x fval] = callObjConstr(x0, newHomo, detthresh, changethresh,...
     entry33thresh, smallsmallthresh, options)
 
-if nargin < 7
-    options = optimset('Algorithm', 'sqp');
+if nargin < 8
+    options = optimset('Algorithm', 'sqp', 'MaxFunEvals', 30000);
 end
 
-[x fval] = fmincon(@objectiveh16istruth, x0, [], [], [], [], [], [], @nonlinearconst, options);
+%[x fval] = fmincon(@objectiveh16istruth, x0, [], [], [], [], [], [], @nonlinearconst, options);
+[x fval] = fmincon(@loop15, x0, [], [], [], [], [], [], @nonlinearconst15homogs, options);
 
     function f = objectiveh16istruth(xin)
     x12 = [xin(1), xin(2), xin(3); xin(4), xin(5), xin(6); xin(7), xin(8), 1];
@@ -84,9 +85,116 @@ end
     c(34:35) = abs(x(23:24) - x0(23:24)) - smallsmallthresh;
     c(36:37) = abs(x(31:32) - x0(31:32)) - smallsmallthresh;
     c(38:39) = abs(x(39:40) - x0(39:40)) - smallsmallthresh;
+    c(40) = abs(x12(3, 3) - 1) - entry33thresh;
     end
 
-    function [c, ceq] = nonlinearconst15matrix(x)
-        
+    function [c, ceq] = nonlinearconst15homogs(x)
+         ceq = [];
+         x0102 = [x(1), x(2), x(3); x(4), x(5), x(6); x(7), x(8), 1];
+x0203 = [x(9), x(10), x(11); x(12), x(13), x(14); x(15), x(16), 1];
+x0304 = [x(17), x(18), x(19); x(20), x(21), x(22); x(23), x(24), 1];
+x0405 = [x(25), x(26), x(27); x(28), x(29), x(30); x(31), x(32), 1];
+x0506 = [x(33), x(34), x(35); x(36), x(37), x(38); x(39), x(40), 1];
+x0607 = [x(41), x(42), x(43); x(44), x(45), x(46); x(47), x(48), 1];
+x0708 = [x(49), x(50), x(51); x(52), x(53), x(54); x(55), x(56), 1];
+x0809 = [x(57), x(58), x(59); x(60), x(61), x(62); x(63), x(64), 1];
+x0910 = [x(65), x(66), x(67); x(68), x(69), x(70); x(71), x(72), 1];
+x1011 = [x(73), x(74), x(75); x(76), x(77), x(78); x(79), x(80), 1];
+x1112 = [x(81), x(82), x(83); x(84), x(85), x(86); x(87), x(88), 1];
+x1213 = [x(89), x(90), x(91); x(92), x(93), x(94); x(95), x(96), 1];
+x1314 = [x(97), x(98), x(99); x(100), x(101), x(102); x(103), x(104), 1];
+x1415 = [x(105), x(106), x(107); x(108), x(109), x(110); x(111), x(112), 1];
+x1516 = [x(113), x(114), x(115); x(116), x(117), x(118); x(119), x(120), 1];
+  
+x0103 = x0102*x0203;
+x0104 = x0103*x0304;
+x0105 = x0104*x0405;
+x0106 = x0105*x0506;
+x0107 = x0106*x0607;
+x0108 = x0107*x0708;
+x0109 = x0108*x0809;
+x0110 = x0109*x0910;
+x0111 = x0110*x1011;
+x0112 = x0111*x1112;
+x0113 = x0112*x1213;
+x0114 = x0113*x1314;
+x0115 = x0114*x1415;
+x0116 = x0115*x1516;
+
+c(1) = abs(det(x0102) - 1) - detthresh;
+c(2) = abs(det(x0203) - 1) - detthresh;
+c(3) = abs(det(x0304) - 1) - detthresh;
+c(4) = abs(det(x0405) - 1) - detthresh;
+c(5) = abs(det(x0506) - 1) - detthresh;
+c(6) = abs(det(x0607) - 1) - detthresh;
+c(7) = abs(det(x0708) - 1) - detthresh;
+c(8) = abs(det(x0809) - 1) - detthresh;
+c(9) = abs(det(x0910) - 1) - detthresh;
+c(10) = abs(det(x1011) - 1) - detthresh;
+c(11) = abs(det(x1112) - 1) - detthresh;
+c(12) = abs(det(x1213) - 1) - detthresh;
+c(13) = abs(det(x1314) - 1) - detthresh;
+c(14) = abs(det(x1415) - 1) - detthresh;
+c(15) = abs(det(x1516) - 1) - detthresh;
+c(16) = abs(x0102(3, 3) - 1) - entry33thresh;
+c(17) = abs(x0103(3, 3) - 1) - entry33thresh;
+c(18) = abs(x0104(3, 3) - 1) - entry33thresh;
+c(19) = abs(x0105(3, 3) - 1) - entry33thresh;
+c(20) = abs(x0106(3, 3) - 1) - entry33thresh;
+c(21) = abs(x0107(3, 3) - 1) - entry33thresh;
+c(22) = abs(x0108(3, 3) - 1) - entry33thresh;
+c(23) = abs(x0109(3, 3) - 1) - entry33thresh;
+c(24) = abs(x0110(3, 3) - 1) - entry33thresh;
+c(25) = abs(x0111(3, 3) - 1) - entry33thresh;
+c(26) = abs(x0112(3, 3) - 1) - entry33thresh;
+c(27) = abs(x0113(3, 3) - 1) - entry33thresh;
+c(28) = abs(x0114(3, 3) - 1) - entry33thresh;
+c(29) = abs(x0115(3, 3) - 1) - entry33thresh;
+c(30) = abs(x0116(3, 3) - 1) - entry33thresh;
+c(31:32) = abs(x(1:2) - x0(1:2)) - changethresh;
+c(33:34) = abs(x(4:5) - x0(4:5)) - changethresh;
+c(35:36) = abs(x(7:8) - x0(7:8)) - smallsmallthresh;
+c(37:38) = abs(x(9:10) - x0(9:10)) - changethresh;
+c(39:40) = abs(x(12:13) - x0(12:13)) - changethresh;
+c(41:42) = abs(x(15:16) - x0(15:16)) - smallsmallthresh;
+c(43:44) = abs(x(17:18) - x0(17:18)) - changethresh;
+c(45:46) = abs(x(20:21) - x0(20:21)) - changethresh;
+c(47:48) = abs(x(23:24) - x0(23:24)) - smallsmallthresh;
+c(49:50) = abs(x(25:26) - x0(25:26)) - changethresh;
+c(51:52) = abs(x(28:29) - x0(28:29)) - changethresh;
+c(53:54) = abs(x(31:32) - x0(31:32)) - smallsmallthresh;
+c(55:56) = abs(x(33:34) - x0(33:34)) - changethresh;
+c(57:58) = abs(x(36:37) - x0(36:37)) - changethresh;
+c(59:60) = abs(x(39:40) - x0(39:40)) - smallsmallthresh;
+c(61:62) = abs(x(41:42) - x0(41:42)) - changethresh;
+c(63:64) = abs(x(44:45) - x0(44:45)) - changethresh;
+c(65:66) = abs(x(47:48) - x0(47:48)) - smallsmallthresh;
+c(67:68) = abs(x(49:50) - x0(49:50)) - changethresh;
+c(69:70) = abs(x(52:53) - x0(52:53)) - changethresh;
+c(71:72) = abs(x(55:56) - x0(55:56)) - smallsmallthresh;
+c(73:74) = abs(x(57:58) - x0(57:58)) - changethresh;
+c(75:76) = abs(x(60:61) - x0(60:61)) - changethresh;
+c(77:78) = abs(x(63:64) - x0(63:64)) - smallsmallthresh;
+c(79:80) = abs(x(65:66) - x0(65:66)) - changethresh;
+c(81:82) = abs(x(68:69) - x0(68:69)) - changethresh;
+c(83:84) = abs(x(71:72) - x0(71:72)) - smallsmallthresh;
+c(85:86) = abs(x(73:74) - x0(73:74)) - changethresh;
+c(87:88) = abs(x(76:77) - x0(76:77)) - changethresh;
+c(89:90) = abs(x(79:80) - x0(79:80)) - smallsmallthresh;
+c(91:92) = abs(x(81:82) - x0(81:82)) - changethresh;
+c(93:94) = abs(x(84:85) - x0(84:85)) - changethresh;
+c(95:96) = abs(x(87:88) - x0(87:88)) - smallsmallthresh;
+c(97:98) = abs(x(89:90) - x0(89:90)) - changethresh;
+c(99:100) = abs(x(92:93) - x0(92:93)) - changethresh;
+c(101:102) = abs(x(95:96) - x0(95:96)) - smallsmallthresh;
+c(103:104) = abs(x(97:98) - x0(97:98)) - changethresh;
+c(105:106) = abs(x(100:101) - x0(100:101)) - changethresh;
+c(107:108) = abs(x(103:104) - x0(103:104)) - smallsmallthresh;
+c(109:110) = abs(x(105:106) - x0(105:106)) - changethresh;
+c(111:112) = abs(x(108:109) - x0(108:109)) - changethresh;
+c(113:114) = abs(x(111:112) - x0(111:112)) - smallsmallthresh;
+c(115:116) = abs(x(113:114) - x0(113:114)) - changethresh;
+c(117:118) = abs(x(116:117) - x0(116:117)) - changethresh;
+c(119:120) = abs(x(119:120) - x0(119:120)) - smallsmallthresh;
     end
 end

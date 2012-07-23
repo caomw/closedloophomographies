@@ -36,21 +36,64 @@ def main():
 
     print 'function [c, ceq] = nonlinearconst' + str(last - first) + 'matrix(x) \n ceq = [];'
     listofvarnames = []
-    for i in xrange(first, last):
-        curx = ('x%(one)02d%(two)02d') % {'one': i, 'two': i + 1}
-        print (curx + ' = [xin(' + str(8*i) + '), xin(' + str(8*i + 1) + 
-                '), xin(' + str(8*i + 2) + '); xin(' + str(8 * i + 3) + '), xin(' +
-                str(8*i + 4) + '), xin(' + str(8*i + 5) + '); xin(' + str(8*i + 6) +
-                '), xin(' + str(8*i + 7) + '), xin(' + str(8*i + 8) + '), 1];')
+    for i in xrange(first - 1, last - 1):
+        curx = ('x%(one)02d%(two)02d') % {'one': i + 1, 'two': i + 2}
+        print (curx + ' = [x(' + str(8*i + 1) + '), x(' + str(8*i + 2) + 
+                '), x(' + str(8*i + 3) + '); x(' + str(8 * i + 4) + '), x(' +
+                str(8*i + 5) + '), x(' + str(8*i + 6) + '); x(' + str(8*i + 7) +
+                '), x(' + str(8*i + 8) + '), 1];')
         listofvarnames.append(curx)
     for i in xrange(first + 2, last + 1):
-        print ('x01%(one)02d = x1' + str(i - 1) + '*x' + str(i - 1) + str(i) + ';') % {'one': i}
+        print ('x%(one)02d%(two)02d = x%(one)02d%(three)02d*x%(three)02d%(two)02d;') % {'one': 1, 'two': i, 'three': i - 1}
     counter = 1;
     for varname in listofvarnames:
         print 'c(' + str(counter) + ') = abs(det(' + varname + ') - 1) - detthresh;'
         counter += 1
-        
+    for i in xrange(first + 1, last + 1):
+        print ('c(' + str(counter) + ') = abs(x01%(one)02d(3, 3) - 1) - entry33thresh;') % {'one': i}     
+        counter += 1
+    for i in xrange(first - 1 , last - 1):
+        print ('c(' + str(counter) + ':' + str(counter + 1) + 
+             ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 1, 'twoi': 8*i + 2}
+        counter += 2
+        print ('c(' + str(counter) + ':' + str(counter + 1) + 
+             ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 4, 'twoi': 8*i + 5}
+        counter += 2
+        print ('c(' + str(counter) + ':' + str(counter + 1) + 
+             ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - smallsmallthresh;') % {'onei': 8*i + 7, 'twoi': 8*i + 8}
+        counter += 2
     print 'end'
+
+    # run test main function
+    print '\n\n\n'
+
+    listofnewvarnames = []
+    for varname in listofvarnames:
+        newvarname = varname.replace('x', 'h')
+        listofnewvarnames.append(newvarname)
+    print ('function runtest' + str(last - first) + 'loop')
+    print ('basefile = sprintf(\'%s/homografia\', testset);')
+    print ('[' + ', '.join(listofnewvarnames) + '] = loadMatFromOpenCVXML(basefile, ' + str(first + 1) + ', ' + str(last) + ');')
+    print ('basefile2 = sprintf(\'%s/homografia_new') + ('%(one)04d.xml\', test_name);') % {'one': last}
+    correct = ('h%(one)02d%(two)02d') % {'one': first, 'two': last}
+    print (correct + ' = importXMLtoMATLAB(basefile2);')
+    for varname in listofnewvarnames:
+        print (varname + 'vec = reshape(' + varname + '\', 9, 1);')
+    print ('x0 = [' + 'vec(1:8); '.join(listofnewvarnames) + 'vec(1:8)];')
+    print ('[x val] = callObjConstr(x0, ' + correct + ', detthresh, changethresh, ... \n entry33thresh, smallsmallthresh);')
+    print ('vecToOpenCVXML(x, test_name)')
+    print 'end'
+   
+    # vecToOpenCVXML function
+    print '\n\n\n'
+    
+    dummycount = 0;
+    for varname in listofnewvarnames:
+        print (varname + 'newvec = [x(%(one)d:%(two)d); 1];') % {'one': 8*dummycount + 1, 'two': 8*dummycount + 8}
+        print ('writetoFile(%(one)d, ' + varname + 'newvec, directory);') % {'one': dummycount + 2}
+        dummycount += 1
+ 
+    # matlab command to run
  
 if __name__ == "__main__":
     main()
