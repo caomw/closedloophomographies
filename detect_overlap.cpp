@@ -116,6 +116,10 @@ int main(int argc, const char* argv[])
     CvMat* PointImg1;
     CvMat* PointImg2;
 
+    //save the identity as the optimal homography 1 in case the optimization doesn't compute it
+    sprintf(filename, "%s/homografia_opt0001.xml", test_name); //in case the first one is not optimized
+    cvSave(filename, H_all);
+
     for (int cur_img = firstimgnum; cur_img <= lastimgnum; cur_img++)
     {   
         closed_loop = false;
@@ -133,7 +137,7 @@ int main(int argc, const char* argv[])
         //save the cumulative homography
         sprintf(filename, "%s/cumhom%04d.xml", test_name, cur_img);
         cvSave(filename, H_all);
- 
+
         //load the image
         sprintf(filename, "%s/mosaico%04d.tif", test_set_name, cur_img);
         imgColor = cvLoadImage(filename);
@@ -376,8 +380,8 @@ int main(int argc, const char* argv[])
 
         cvShowImage("mosaic", mosaic->imgDoble); 
 
-        sprintf(filename, "%s/regmos%04d.tif", test_set_name, cur_img);
-        cvSaveImage(filename, mosaic->imgDoble);
+//        sprintf(filename, "%s/regmos%04d.tif", test_set_name, cur_img);
+//        cvSaveImage(filename, mosaic->imgDoble);
 
         cvCopy(H_all, H_old, NULL);
        

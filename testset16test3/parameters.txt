@@ -1,0 +1,3 @@
+  [x x0] = runtest('test_set_16', 'testset16test3', .11, .06, .02, .0008, 150);
+
+and the first matrix was allowed to vary.

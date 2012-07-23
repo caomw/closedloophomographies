@@ -37,6 +37,8 @@ int main(int argc, const char* argv[])
     mosaic_recomp->imgDoble = cvCreateImage( cvSize(mosaic_recomp->finalsizex*imgWidth,mosaic_recomp->finalsizey*imgHeight), 8, 3);
     mosaic_recomp->imgDobleLast = cvCreateImage( cvSize(mosaic_recomp->finalsizex*imgWidth,mosaic_recomp->finalsizey*imgHeight), 8, 3);
 
+    char filename[200];
+
     CvMat* H_recomp = cvCreateMat(3, 3, CV_32FC1);
     CvMat* H_cum = cvCreateMat(3, 3, CV_32FC1);
     CvMat* H_all = cvCreateMat(3, 3, CV_32FC1);
@@ -45,8 +47,6 @@ int main(int argc, const char* argv[])
     CvMat* H_old = cvCreateMat(3, 3, CV_32FC1);
     cvSetIdentity(H_old);
     IplImage* imgColorRecomp = cvCreateImage(cvSize(imgWidth, imgHeight), IPL_DEPTH_8U, 3);//cvLoadImage(filename); 
-
-    char filename[200];
 
     cvNamedWindow("recomputed_mosaic", 0);
 

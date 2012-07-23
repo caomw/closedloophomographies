@@ -2,12 +2,12 @@ function [x fval] = callObjConstr(x0, newHomo, detthresh, changethresh,...
     entry33thresh, smallsmallthresh, transthresh, options)
 
 if nargin < 9
-    options = optimset('Algorithm', 'sqp'); %, 'MaxFunEvals', 30000);
+    options = optimset('Algorithm', 'sqp', 'MaxFunEvals', 20000);
 end
 
 %[x fval] = fmincon(@objectiveh16istruth, x0, [], [], [], [], [], [], @nonlinearconst, options);
-[x fval] = fmincon(@loop15, x0, [], [], [], [], [], [], @nonlinearconst15, options);
-%[x fval] = fmincon(@loop15includingfirst, x0, [], [], [], [], [], [], @nonlinearconst15includingfirst, options);
+%[x fval] = fmincon(@loop15, x0, [], [], [], [], [], [], @nonlinearconst15, options);
+[x fval] = fmincon(@loop15includingfirst, x0, [], [], [], [], [], [], @nonlinearconst15includingfirst, options);
 
     function f = objectiveh16istruth(xin)
     x12 = [xin(1), xin(2), xin(3); xin(4), xin(5), xin(6); xin(7), xin(8), 1];

@@ -78,6 +78,12 @@ two variables - i.e. if component $(1, 1)$ changes by $-100$ and component $(3,
 whereas in reality the new homography matrix is very different from the old
 homography matrix.
 
+\item Factor the new homography matrix and allow not ``too much'' of a change
+from the new translation and rotation components.   
+
+\item Don't care about changes between each of the individual homographies but
+care about the changes in all the cumulative homographies. 
+
 \end{enumerate} 
 
 Right now my code uses the \ref{indiv_thresh} metric of ``too much change.''
