@@ -21,6 +21,10 @@ end
         abs(xcum(3, 3) - h16(3, 3)); 
     end
 
+    function f = loop15(xin)
+    
+    end
+
     function [c, ceq] = nonlinearconst(x)
     %detthresh = 0.10;
     %changethresh = 0.04;

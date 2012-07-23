@@ -166,7 +166,8 @@ int main(int argc, const char* argv[])
         double bcmad = 0;
         double tx = 0;
         double ty = 0;
-        double transerror = 0;    
+        double transerror = 0;   
+        double dimensionerror = 1.5; 
 
         //look for closed loop  
         switch(detecttype){
@@ -244,7 +245,7 @@ int main(int argc, const char* argv[])
 //                print_cv_matrix(translation);
                 tx = rtvecs[cur_img - firstimgnum].x;
                 ty = rtvecs[cur_img - firstimgnum].y;
-                transerror = tx*tx/(imgWidth/2 * imgWidth/2) + ty*ty/(imgHeight/2 * imgHeight/2);
+                transerror = tx*tx/(dimensionerror * imgWidth/2 * dimensionerror * imgWidth/2) + ty*ty/(dimensionerror * imgHeight/2 * dimensionerror * imgHeight/2);
                 printf("transerror = %f\n", transerror);
 
                 if (transerror < 1 && cur_img != firstimgnum){
