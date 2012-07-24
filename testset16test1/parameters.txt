@@ -1,3 +1,0 @@
- [x x0] = runtest('test_set_16', 'testset16test1', .12, .08, .02, .0005);
-
-but the first homography was fixed as I
