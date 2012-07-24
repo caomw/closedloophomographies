@@ -35,7 +35,7 @@ def main():
 
     # optimization function generation INCLUDING THE FIRST HOMOGRAPHY
 
-    if (True):
+    if (False):
         print 'function f = loop' + str(last - first) + 'includingfirst(xin)'
         xcumstring = ''
         for i in xrange(first - 1, last):
@@ -100,7 +100,7 @@ def main():
 
     # linear constraint generation INCLUDING FIRST HOMOGRAPHY 
 
-    if (True):
+    if (False):
         print 'function [c, ceq] = nonlinearconst' + str(last - first) + 'matrixincludingfirst(x) \n ceq = [];'
         listofvarnames = []
         for i in xrange(first - 1, last):
@@ -123,12 +123,12 @@ def main():
             print ('c(' + str(counter) + ':' + str(counter + 1) + 
                  ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 1, 'twoi': 8*i + 2}
             counter += 2
-            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthresh;') % {'onei': 8*i + 3}
+            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthreshx;') % {'onei': 8*i + 3}
             counter += 1
             print ('c(' + str(counter) + ':' + str(counter + 1) + 
                  ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 4, 'twoi': 8*i + 5}
             counter += 2
-            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthresh;') % {'onei': 8*i + 6}
+            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthreshy;') % {'onei': 8*i + 6}
             counter += 1
             print ('c(' + str(counter) + ':' + str(counter + 1) + 
                  ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - smallsmallthresh;') % {'onei': 8*i + 7, 'twoi': 8*i + 8}
@@ -136,6 +136,127 @@ def main():
         print 'end'
 
         print '\n\n\n'
+
+    # linear constraint generation INCLUDING FIRST HOMOGRAPHY cumulative constrants -- TODO. is it even worth it?
+
+    if (False):
+        print 'function [c, ceq] = nonlinearconst' + str(last - first) + 'matrixincludingfirst(x) \n ceq = [];'
+        listofvarnames = []
+        for i in xrange(first - 1, last):
+            curx = ('x%(one)02d%(two)02d') % {'one': i, 'two': i + 1}
+            print (curx + ' = [x(' + str(8*i + 1) + '), x(' + str(8*i + 2) + 
+                    '), x(' + str(8*i + 3) + '); x(' + str(8 * i + 4) + '), x(' +
+                    str(8*i + 5) + '), x(' + str(8*i + 6) + '); x(' + str(8*i + 7) +
+                    '), x(' + str(8*i + 8) + '), 1];')
+            listofvarnames.append(curx)
+        for i in xrange(first + 1, last + 1):
+            print ('x%(one)02d%(two)02d = x%(one)02d%(three)02d*x%(three)02d%(two)02d;') % {'one': 0, 'two': i, 'three': i - 1}
+        counter = 1;
+        for varname in listofvarnames:
+            print 'c(' + str(counter) + ') = abs(det(' + varname + ') - 1) - detthresh;'
+            counter += 1
+        for i in xrange(first, last + 1):
+            print ('c(' + str(counter) + ') = abs(x00%(one)02d(3, 3) - 1) - entry33thresh;') % {'one': i}     
+            counter += 1
+        for i in xrange(first - 1 , last):
+            print ('c(' + str(counter) + ':' + str(counter + 1) + 
+                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 1, 'twoi': 8*i + 2}
+            counter += 2
+            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthreshx;') % {'onei': 8*i + 3}
+            counter += 1
+            print ('c(' + str(counter) + ':' + str(counter + 1) + 
+                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 4, 'twoi': 8*i + 5}
+            counter += 2
+            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthreshy;') % {'onei': 8*i + 6}
+            counter += 1
+            print ('c(' + str(counter) + ':' + str(counter + 1) + 
+                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - smallsmallthresh;') % {'onei': 8*i + 7, 'twoi': 8*i + 8}
+            counter += 2
+        print 'end'
+
+        print '\n\n\n'
+
+    # linear constraint generation INCLUDING FIRST HOMOGRAPHY and including not allowing sign changes 
+
+    if (False):
+        print 'function [c, ceq] = nonlinearconst' + str(last - first) + 'matrixincludingfirstandnosignchange(x);'
+        listofvarnames = []
+        for i in xrange(first - 1, last):
+            curx = ('x%(one)02d%(two)02d') % {'one': i, 'two': i + 1}
+            print (curx + ' = [x(' + str(8*i + 1) + '), x(' + str(8*i + 2) + 
+                    '), x(' + str(8*i + 3) + '); x(' + str(8 * i + 4) + '), x(' +
+                    str(8*i + 5) + '), x(' + str(8*i + 6) + '); x(' + str(8*i + 7) +
+                    '), x(' + str(8*i + 8) + '), 1];')
+            listofvarnames.append(curx)
+        for i in xrange(first + 1, last + 1):
+            print ('x%(one)02d%(two)02d = x%(one)02d%(three)02d*x%(three)02d%(two)02d;') % {'one': 0, 'two': i, 'three': i - 1}
+        counter = 1;
+        for varname in listofvarnames:
+            print 'c(' + str(counter) + ') = abs(det(' + varname + ') - 1) - detthresh;'
+            counter += 1
+        for i in xrange(first, last + 1):
+            print ('c(' + str(counter) + ') = abs(x00%(one)02d(3, 3) - 1) - entry33thresh;') % {'one': i}     
+            counter += 1
+        for i in xrange(first - 1 , last):
+            print ('c(' + str(counter) + ':' + str(counter + 1) + 
+                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 1, 'twoi': 8*i + 2}
+            counter += 2
+            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthreshx;') % {'onei': 8*i + 3}
+            counter += 1
+            print ('c(' + str(counter) + ':' + str(counter + 1) + 
+                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 4, 'twoi': 8*i + 5}
+            counter += 2
+            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthreshy;') % {'onei': 8*i + 6}
+            counter += 1
+            print ('c(' + str(counter) + ':' + str(counter + 1) + 
+                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - smallsmallthresh;') % {'onei': 8*i + 7, 'twoi': 8*i + 8}
+            counter += 2
+        for i in xrange(1, 8*(last - first + 1) + 1):
+            print ('ceq(%(one)d) = abs(x(%(one)d) - x0(%(one)d)) - 2;') % {'one': i}
+        print 'end'
+
+        print '\n\n\n'
+
+    # linear constraint generation INCLUDING FIRST HOMOGRAPHY using t and R constraints non-cumulative 
+
+    if (True):
+        print 'function [c, ceq] = nonlinearconst' + str(last - first) + 'matrixincludingfirstandnosignchange(x);'
+        listofvarnames = []
+        for i in xrange(first - 1, last):
+            curx = ('x%(one)02d%(two)02d') % {'one': i, 'two': i + 1}
+            print (curx + ' = [x(' + str(8*i + 1) + '), x(' + str(8*i + 2) + 
+                    '), x(' + str(8*i + 3) + '); x(' + str(8 * i + 4) + '), x(' +
+                    str(8*i + 5) + '), x(' + str(8*i + 6) + '); x(' + str(8*i + 7) +
+                    '), x(' + str(8*i + 8) + '), 1];')
+            listofvarnames.append(curx)
+        for i in xrange(first + 1, last + 1):
+            print ('x%(one)02d%(two)02d = x%(one)02d%(three)02d*x%(three)02d%(two)02d;') % {'one': 0, 'two': i, 'three': i - 1}
+        counter = 1;
+        for varname in listofvarnames:
+            print 'c(' + str(counter) + ') = abs(det(' + varname + ') - 1) - detthresh;'
+            counter += 1
+        for i in xrange(first, last + 1):
+            print ('c(' + str(counter) + ') = abs(x00%(one)02d(3, 3) - 1) - entry33thresh;') % {'one': i}     
+            counter += 1
+        for i in xrange(first - 1 , last):
+            print ('c(' + str(counter) + ':' + str(counter + 1) + 
+                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 1, 'twoi': 8*i + 2}
+            counter += 2
+            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthreshx;') % {'onei': 8*i + 3}
+            counter += 1
+            print ('c(' + str(counter) + ':' + str(counter + 1) + 
+                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 4, 'twoi': 8*i + 5}
+            counter += 2
+            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthreshy;') % {'onei': 8*i + 6}
+            counter += 1
+            print ('c(' + str(counter) + ':' + str(counter + 1) + 
+                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - smallsmallthresh;') % {'onei': 8*i + 7, 'twoi': 8*i + 8}
+            counter += 2
+        print 'end'
+
+        print '\n\n\n'
+
+
 
     # run test main function
 
@@ -153,7 +274,7 @@ def main():
         for varname in listofnewvarnames:
             print (varname + 'vec = reshape(' + varname + '\', 9, 1);')
         print ('x0 = [' + 'vec(1:8); '.join(listofnewvarnames) + 'vec(1:8)];')
-        print ('[x val] = callObjConstr(x0, ' + correct + ', detthresh, changethresh, ... \n entry33thresh, smallsmallthresh);')
+        print ('[x val] = callObjConstr(x0, ' + correct + ', detthresh, changethresh, ... \n entry33thresh, smallsmallthresh, transthreshx, transthreshy);')
         print ('vecToOpenCVXML(x, test_name)')
         print 'end'
       
@@ -161,7 +282,7 @@ def main():
  
     # run test main function INCLUDING FIRST ONE
 
-    if (True):
+    if (False):
         listofnewvarnames = []
         for varname in listofvarnames:
             newvarname = varname.replace('x', 'h')
@@ -194,7 +315,7 @@ def main():
  
     # vecToOpenCVXML function INCLUDING FIRST ONE
    
-    if (True): 
+    if (False): 
         dummycount = 0;
         for varname in listofnewvarnames:
             print (varname + 'newvec = [x(%(one)d:%(two)d); 1];') % {'one': 8*dummycount + 1, 'two': 8*dummycount + 8}
