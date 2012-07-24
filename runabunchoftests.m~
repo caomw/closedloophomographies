@@ -46,9 +46,9 @@ function runabunchoftests
 %no feasible solution
 %runtest('test_set_16', 'testset16test10', .20, .15, .01, .001, 100, 100);
 %no feasible solution
-runtest('test_set_16', 'testset16test10', .20, .05, .01, .001, 150, 100);
-%local mi
-runtest('test_set_16', 'testset16test11', .20, .05, .01, .001, 120, 90);
+%runtest('test_set_16', 'testset16test10', .20, .05, .01, .001, 150, 100);
+%local minimum found
+%runtest('test_set_16', 'testset16test11', .20, .05, .01, .001, 120, 90);
 %no feasible solution
 
 

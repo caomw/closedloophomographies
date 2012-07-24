@@ -50,7 +50,20 @@ function runabunchoftests
 %local minimum found
 %runtest('test_set_16', 'testset16test11', .20, .05, .01, .001, 120, 90);
 %no feasible solution
-
+%runtest('test_set_16', 'testset16test11', .20, .05, .01, .001, 120, 90);
+%no feasible solution
+runtest('test_set_16', 'testset16test11', .15, .15, .01, .001, 120, 90);
+%no feasible solution
+runtest('test_set_16', 'testset16test12', .20, .05, .01, .001, 150, 100);
+%no feasible solution
+runtest('test_set_16', 'testset16test13', .20, .05, .01, .001, 200, 150);
+%no feasible solution
+%runtest('test_set_16', 'testset16test14', .20, .05, .01, .001, 120, 90);
+%
+%runtest('test_set_16', 'testset16test15', .20, .05, .01, .001, 120, 90);
+%
+%runtest('test_set_16', 'testset16test16', .20, .05, .01, .001, 120, 90);
+%
 
 
 end
