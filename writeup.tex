@@ -1,0 +1,194 @@
+\documentclass{article}
+\usepackage{amsmath, amssymb, amsthm, enumerate}
+
+\title{Using Closed-Loop Detection to Improve Homography Estimation and Mosaicing}
+\author{Michele Pratusevich}
+\date{\today}
+
+\begin{document} 
+\maketitle
+\tableofcontents
+
+%\begin{abstract}
+%
+%The goal of the project is to improve automatic image mosaicing. An image
+%mosaic is constructed by splitting a video of a scene into images and computing
+%image homographies between adjacent videos. However, errors in the homography
+%computation compound with each homography computation, resulting in inaccurate
+%mosaicing. The image sequence is analyzed to detect closed loops, or when the
+%image returns to a component in the scene that has already been seen. Using the
+%information from a detected closed loop, the homographies computed from the
+%images are improved for accuracy.      
+%
+%\end{abstract}
+
+\section{Introduction and Overview}
+
+The goal of this project is to improve an automatically mosaiced image by
+detecting a closed loop in a sequence of images and re-computing the calculated
+image homographies using nonlinear optimization. First homographies will be
+discussed, with some discussion about factoring homography matrices to
+determine the various components of a homography. Next the techniques for
+detecting a closed loop in an image sequence are discussed. Then the
+optimization problem for improving the homography matrices is described in
+terms of formulation and the constraints. Lastly, further considerations and
+ideas are discussed. 
+
+\section{Homographies}
+
+A homography $H$ in this context is a $3$ by $3$ matrix $H_{i, j}$ that
+describes the relationship between image $i$ and image $j$ in an image
+sequence. In this application, the homographies $H_{i, i + 1}$ are calculated
+between consecutive images $i$ and $i + 1$. When calculating an image mosaic,
+the cumulative homography for image $k$ in the sequence is calculated by
+multiplying each of the previous homography matrices together until the current
+image: 
+
+\[H_{1, k} = H_{1, 2} \cdot H_{2, 3} \cdots H_{k - 1, k}\]
+
+In the application of creating a 2-D mosaic from a video, the homography is a
+2D homography, transforming a point $[u, v, 1]^T$ to $[u', v', 1]^T$ up to a
+scale factor, normalized in OpenCV to be $1$. 
+
+As discussed by Sonka, et. al in \cite{sonkatext}, homographies form a group
+under multiplication as shown above. There are various important subgroups that
+can be used to factor any homography matrix $H$ into it's components. As
+discussed in \cite{sonkatext}, any homography can be decomposed as $H = H_P H_A H_S$ where 
+
+\[
+H_P = \begin{bmatrix} I & \mathbf{0} \\ \mathbf{a}^T & b \end{bmatrix}, \qquad
+H_A = \begin{bmatrix} K & \mathbf{0} \\ \mathbf{0}^T & 1 \end{bmatrix}, \qquad
+H_S = \begin{bmatrix} R & -R\mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix}
+\] 
+
+and $K$ is upper triangular. Page $557$ in \cite{sonkatext} gives more
+information about these subgroups. 
+
+Using the factorization above as a starting point, a homography matrix is
+therefore written as follows:
+
+\[H = H_P H_A H_S = \begin{bmatrix}KR & -KR\mathbf{t} \\ \mathbf{a}^TKR &
+ -\mathbf{a}^TKR\mathbf{t} + \mathbf{b} \end{bmatrix}\] 
+
+
+
+TODO 
+
+\section{Detecting a Closed Loop}
+
+TODO
+
+\section{Optimization Problem Formulation}
+
+This is the problem formulation for the optimization problem in closed-loop
+homographies.
+
+There is a closed loop detected between image $1$ and image $n$. Each
+homography computed by the mosaicing algorithm, $H_{i, i + 1}$, is the
+homography from image $i$ to the next image $i + 1$, computed using OpenCV (and
+RANSAC). Once the closed loop is detected, the homography $H_{1, n}$ is
+computed between image $1$ and the overlap image $n$. 
+
+Overall, the goal of the optimization algorithm is to minimize the error
+between
+ 
+\[H_{1, 2} \cdot H_{2, 3} \cdots H_{n - 2, n - 1} \cdot H_{n - 1, n} - H_{1, n} = 0\]
+
+which can be written as
+
+\[H_{1, n}^{\textnormal{cumulative}} - H_{1, n} = 0.\]
+
+Using a scalar formulation of the problem, the error is calculated by
+calculating the sum of the absolute values of the differences between the
+cumulative and new homographies for each component in the matrix.
+
+\[\sum_{i,j} |(H_{1, n}^{\textnormal{cumulative}})_{ij} - (H_{1, n})_{ij}|.\]
+
+The variables given to the optimizer are the $8$ parameters in each of the
+matrices $H_{i, i + 1}$ (each entry of the homography matrix except for the $3,
+3$ entry, which is assumed to be $1$. The values of the $H_{1, n}$ matrix are
+not variables in the optimization function, but are taken as truth.
+\footnote{It is possible to use the components of the closed-loop matrix as
+variables too, but for now I've implemented the code to consider it as truth. I
+will try using those components as variables as well.} The optimizer will yield
+$n$ new homography matrices $H_{i, i+1}^{\textnormal{optimized}}$. 
+
+The optimizer tries to minimize this nonlinear multivariable function according
+to the following constraints:
+
+\begin{enumerate}
+
+\item The new matrices that are computed must be homography matrices (i.e.
+still have determinant close to $1$).
+
+\[|\det(H_{i, i+1}) - 1| \leq \textnormal{determinant\_threshold } \forall i \in (1, n-1)\] 
+
+\item The variables in each matrix can't change ``too much.'' There are a few
+ways to implement this:
+
+\begin{enumerate}
+
+\item \label{indiv_thresh} The individual variables can only change within a certain range (with
+this range being different depending on which component in the homography it
+is):
+
+\[|(H_{i, i+1})_{1, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 1}| \leq \textnormal{change\_threshold}\] 
+\[|(H_{i, i+1})_{1, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 2}| \leq \textnormal{change\_threshold}\] 
+\[|(H_{i, i+1})_{2, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 1}| \leq \textnormal{change\_threshold}\] 
+\[|(H_{i, i+1})_{2, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 2}| \leq \textnormal{change\_threshold}\] 
+\[|(H_{i, i+1})_{3, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 1}| \leq \textnormal{pixel\_threshold}\] 
+\[|(H_{i, i+1})_{3, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 2}| \leq \textnormal{pixel\_threshold}\] 
+\[|(H_{i, i+1})_{1, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 3}| \leq \textnormal{small\_threshold}\] 
+\[|(H_{i, i+1})_{2, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 3}| \leq \textnormal{small\_threshold}\] 
+
+The reason each entry (or group of entries) should have it`s own threshold is
+that each component of the homography matrix is related to a different
+transformation and has different similarity tolerances. 
+
+\item The total change in all the variables of a particular matrix can`t exceed a certain value.
+
+\[|\sum_{i, j} (H_{k, k+1})_{i, j}| \leq \textnormal{sum\_thresh}\]
+
+I don`t like this way because it does not account for two very large changes in
+two variables - i.e. if component $(1, 1)$ changes by $-100$ and component $(3,
+3)$ changes by $+99$, it seems that there wasn't that much change in total
+whereas in reality the new homography matrix is very different from the old
+homography matrix.
+
+\item Factor the new homography matrix and allow not ``too much'' of a change
+from the new translation and rotation components.   
+
+\item Don't care about changes between each of the individual homographies but
+care about the changes in all the cumulative homographies. 
+
+\end{enumerate} 
+
+Right now my code uses the \ref{indiv_thresh} metric of ``too much change.''
+
+\item The $3, 3$ entry of all the intermediate homographies computed with
+$H^{\textnormal{optimized}}$ cannot be very different from $1$.
+
+\[\textnormal{Let } H_{1, k}^{\textnormal{optimized}} = H_{1, 2}^{\textnormal{optimized}} \cdots H_{k - 1, k}^{\textnormal{optimized}}\]
+\[|(H_{1, k}^{\textnormal{optimized}})_{3, 3} - 1| \leq \textnormal{entry33\_threshold } \forall k \in (2, n)\]
+
+\end{enumerate}
+
+\section{Results}
+
+TODO
+
+\section{Discussion and Additional Points of Consideration}
+
+TODO
+
+\section{Conclusion}
+
+TODO
+
+\begin{thebibliography}{1}
+
+\bibitem{sonkatext} M. Sonka, V. Hlavac, and R. Boyle, \emph{Image Processing, Analysis, and Machine Vision, 3rd ed.}, Thomson, USA, 2008.
+
+\end{thebibliography}
+
+\end{document}

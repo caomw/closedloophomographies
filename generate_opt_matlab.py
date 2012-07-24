@@ -212,7 +212,7 @@ def main():
                  ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - smallsmallthresh;') % {'onei': 8*i + 7, 'twoi': 8*i + 8}
             counter += 2
         for i in xrange(1, 8*(last - first + 1) + 1):
-            print ('ceq(%(one)d) = abs(sign(x(%(one)d)) - sign(x0(%(one)d))) - 2;') % {'one': i}
+            print ('ceq(%(one)d) = sign(x(%(one)d)) - sign(x0(%(one)d));') % {'one': i}
         print 'end'
 
         print '\n\n\n'
