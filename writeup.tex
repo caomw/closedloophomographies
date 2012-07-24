@@ -1,5 +1,5 @@
 \documentclass{article}
-\usepackage{amsmath, amssymb, amsthm, enumerate}
+\usepackage{amsmath, amssymb, amsthm, enumerate, url}
 
 \title{Using Closed-Loop Detection to Improve Homography Estimation and Mosaicing}
 \author{Michele Pratusevich}
@@ -36,6 +36,8 @@ ideas are discussed.
 
 \section{Homographies}
 
+\subsection{In General} 
+
 A homography $H$ in this context is a $3$ by $3$ matrix $H_{i, j}$ that
 describes the relationship between image $i$ and image $j$ in an image
 sequence. In this application, the homographies $H_{i, i + 1}$ are calculated
@@ -50,6 +52,8 @@ In the application of creating a 2-D mosaic from a video, the homography is a
 2D homography, transforming a point $[u, v, 1]^T$ to $[u', v', 1]^T$ up to a
 scale factor, normalized in OpenCV to be $1$. 
 
+\subsection{Factoring a Homography Matrix}
+
 As discussed by Sonka, et. al in \cite{sonkatext}, homographies form a group
 under multiplication as shown above. There are various important subgroups that
 can be used to factor any homography matrix $H$ into it's components. As
@@ -61,7 +65,7 @@ H_A = \begin{bmatrix} K & \mathbf{0} \\ \mathbf{0}^T & 1 \end{bmatrix}, \qquad
 H_S = \begin{bmatrix} R & -R\mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix}
 \] 
 
-and $K$ is upper triangular. Page $557$ in \cite{sonkatext} gives more
+And $K$ is upper triangular. Page $557$ in \cite{sonkatext} gives more
 information about these subgroups. 
 
 Using the factorization above as a starting point, a homography matrix is
@@ -70,9 +74,76 @@ therefore written as follows:
 \[H = H_P H_A H_S = \begin{bmatrix}KR & -KR\mathbf{t} \\ \mathbf{a}^TKR &
  -\mathbf{a}^TKR\mathbf{t} + \mathbf{b} \end{bmatrix}\] 
 
+Where $t$ is the translation vector, $R$ is the rotation matrix for rotation in
+the $xy$-plane, and $K$ is the dilation matrix in the $xy$-directions.
+$\mathbf{a}$ and $\mathbf{b}$ are coefficients related to the rotation and
+dilation in the $z$ direction.
 
+\subsection{Computing the Homography Matrices in Code: Overview}
 
-TODO 
+The homography matrices can be computed using an OpenCV method called
+\verb|cvFindHomography|, described in \cite{cvhomog}, which needs to be tuned
+according to the application you are working with. For instance, the window
+size that is needed to find a correct homography depends on how close the
+camera is to the scene in question. 
+
+To use the \verb|cvFindHomography| method you already need to have points
+picked out on both images that are known to be correspondent. In applications
+with few images, these points can be picked out by hand and visual inspection.
+Because the goal of this project was to create a fully automated mosaicing
+algorithm, manually picking points was not an option. Instead, because the
+image sequence is taken from a video, the video can be sequenced in such a way
+to make the images overlapped by a significant amount. Given this information,
+we use optical flow in the OpenCV method \verb|cvCalcOpticalFlowPyrLK| to
+calculate the new positions of interest points from the first image in the
+second image. The optical flow method has parameters to tune as well. 
+
+The interest points in the first image are found using the OpenCV methods
+\verb|cvGoodFeaturesToTrack| and \verb|cvFindCornerSubPix|, described in
+\cite{points}. The parameters on these methods must be tuned as well. 
+
+The \verb|cvFindHomography| method then uses correspondences in those points to
+compute an image-wide homography that is then used to construct the mosaic. 
+
+\subsection{Parameters in OpenCV Methods}
+
+The various parameters tuned for the OpenCV methods are as follows (written in order as they appear on \cite{cvhomogs, points}:
+
+\begin{itemize}
+
+\item \verb|cvGoodFeaturesToTrack|
+
+\begin{itemize}
+
+\item  
+
+\end{itemize} 
+
+\item \verb|cvFindCornerSubPix|
+
+\begin{itemize}
+
+\item  
+
+\end{itemize} 
+
+\item \verb|cvCalcOpticalFlowPyrLK|
+
+\begin{itemize}
+
+\item   
+
+\end{itemize} 
+
+\item \verb|cvFindHomography|
+
+\begin{itemize}
+
+\item  
+
+\end{itemize} 
+
+\end{itemize}
 
 \section{Detecting a Closed Loop}
 
@@ -94,7 +165,7 @@ between
  
 \[H_{1, 2} \cdot H_{2, 3} \cdots H_{n - 2, n - 1} \cdot H_{n - 1, n} - H_{1, n} = 0\]
 
-which can be written as
+Which can be written as
 
 \[H_{1, n}^{\textnormal{cumulative}} - H_{1, n} = 0.\]
 
@@ -188,6 +259,10 @@ TODO
 \begin{thebibliography}{1}
 
 \bibitem{sonkatext} M. Sonka, V. Hlavac, and R. Boyle, \emph{Image Processing, Analysis, and Machine Vision, 3rd ed.}, Thomson, USA, 2008.
+
+\bibitem{cvhomogs} \url{http://opencv.willowgarage.com/documentation/camera_calibration_and_3d_reconstruction.html}
+
+\bibitem{points} \url{http://opencv.willowgarage.com/documentation/cpp/imgproc_feature_detection.html}
 
 \end{thebibliography}
 

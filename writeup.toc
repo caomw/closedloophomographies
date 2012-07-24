@@ -1,7 +1,11 @@
 \contentsline {section}{\numberline {1}Introduction and Overview}{1}
-\contentsline {section}{\numberline {2}Homographies}{1}
-\contentsline {section}{\numberline {3}Detecting a Closed Loop}{2}
-\contentsline {section}{\numberline {4}Optimization Problem Formulation}{2}
-\contentsline {section}{\numberline {5}Results}{4}
-\contentsline {section}{\numberline {6}Discussion and Additional Points of Consideration}{4}
-\contentsline {section}{\numberline {7}Conclusion}{4}
+\contentsline {section}{\numberline {2}Homographies}{2}
+\contentsline {subsection}{\numberline {2.1}In General}{2}
+\contentsline {subsection}{\numberline {2.2}Factoring a Homography Matrix}{2}
+\contentsline {subsection}{\numberline {2.3}Computing the Homography Matrices in Code: Overview}{2}
+\contentsline {subsection}{\numberline {2.4}Parameters in OpenCV Methods}{3}
+\contentsline {section}{\numberline {3}Detecting a Closed Loop}{3}
+\contentsline {section}{\numberline {4}Optimization Problem Formulation}{3}
+\contentsline {section}{\numberline {5}Results}{5}
+\contentsline {section}{\numberline {6}Discussion and Additional Points of Consideration}{5}
+\contentsline {section}{\numberline {7}Conclusion}{6}
