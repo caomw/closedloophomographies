@@ -58,6 +58,32 @@ def main():
 
         print '\n\n'
 
+    # optimization function generation INCLUDING THE FIRST HOMOGRAPHY squared instead of absolute value.
+
+    if (False):
+        print 'function f = loop' + str(last - first) + 'includingfirstsq(xin)'
+        xcumstring = ''
+        for i in xrange(first - 1, last):
+            curx = ('x%(one)02d%(two)02d') % {'one': i, 'two': i + 1}
+            if i == 0:
+                xcumstring = curx
+            else:
+                xcumstring += '*' + curx
+            print (curx + ' = [xin(' + str(8*i + 1) + '), xin(' + str(8*i + 2) + 
+                    '), xin(' + str(8*i + 3) + '); xin(' + str(8 * i + 4) + '), xin(' +
+                    str(8*i + 5) + '), xin(' + str(8*i + 6) + '); xin(' + str(8*i + 7) +
+                    '), xin(' + str(8*i + 8) + '), 1];')
+        print 'xcum = ' + xcumstring + ';'
+        print ('f = (xcum(1, 1) - newHomo(1, 1))^2 + (xcum(1, 2) - newHomo(1, 2))^2 + ...\n' + 
+            '\t(xcum(1, 3) - newHomo(1, 3))^2 + (xcum(2, 1) - newHomo(2, 1))^2 + ...\n' + 
+            '\t(xcum(2, 2) - newHomo(2, 2))^2 + (xcum(2, 3) - newHomo(2, 3))^2 + ...\n' +
+            '\t(xcum(3, 1) - newHomo(3, 1))^2 + (xcum(3, 2) - newHomo(3, 2))^2 + ...\n' +
+            '\t(xcum(3, 3) - newHomo(3, 3))^2;')
+        print 'end'
+
+        print '\n\n'
+
+
 
     # linear constraint generation 
 
@@ -137,7 +163,32 @@ def main():
 
         print '\n\n\n'
 
+    # linear constraint generation INCLUDING FIRST HOMOGRAPHY only basic sontraints 
+
+    if (True):
+        print 'function [c, ceq] = onlybasicconstraints' + str(last - first) + '(x)\n ceq = [];'
+        counter = 1;
+        for i in xrange(first - 1 , last):
+            print ('c(' + str(counter) + ':' + str(counter + 1) + 
+                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 1, 'twoi': 8*i + 2}
+            counter += 2
+            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthreshx;') % {'onei': 8*i + 3}
+            counter += 1
+            print ('c(' + str(counter) + ':' + str(counter + 1) + 
+                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 4, 'twoi': 8*i + 5}
+            counter += 2
+            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthreshy;') % {'onei': 8*i + 6}
+            counter += 1
+            print ('c(' + str(counter) + ':' + str(counter + 1) + 
+                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - smallsmallthresh;') % {'onei': 8*i + 7, 'twoi': 8*i + 8}
+            counter += 2
+        print 'end'
+
+        print '\n\n\n'
+
+
     # linear constraint generation INCLUDING FIRST HOMOGRAPHY cumulative constrants -- TODO. is it even worth it?
+    # pobably not, with the other ideas that Pascual had.
 
     if (False):
         print 'function [c, ceq] = nonlinearconst' + str(last - first) + 'matrixincludingfirst(x) \n ceq = [];'
@@ -178,7 +229,7 @@ def main():
 
     # linear constraint generation INCLUDING FIRST HOMOGRAPHY and including not allowing sign changes 
 
-    if (True):
+    if (False):
         print 'function [c, ceq] = nonlinearconst' + str(last - first) + 'matrixincludingfirstandnosignchange(x);'
         listofvarnames = []
         for i in xrange(first - 1, last):
@@ -219,7 +270,7 @@ def main():
 
     # linear constraint generation INCLUDING FIRST HOMOGRAPHY using t and R constraints non-cumulative 
 
-    if (True):
+    if (False):
         print 'function [c, ceq] = nonlinearconst' + str(last - first) + 'matrixincludingfirstandnosignchange(x);'
         listofvarnames = []
         for i in xrange(first - 1, last):

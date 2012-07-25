@@ -53,6 +53,7 @@ In the application of creating a 2-D mosaic from a video, the homography is a
 scale factor, normalized in OpenCV to be $1$. 
 
 \subsection{Factoring a Homography Matrix}
+\label{factoring}
 
 As discussed by Sonka, et. al in \cite{sonkatext}, homographies form a group
 under multiplication as shown above. There are various important subgroups that
@@ -96,7 +97,7 @@ image sequence is taken from a video, the video can be sequenced in such a way
 to make the images overlapped by a significant amount. Given this information,
 we use optical flow in the OpenCV method \verb|cvCalcOpticalFlowPyrLK| to
 calculate the new positions of interest points from the first image in the
-second image. The optical flow method has parameters to tune as well. 
+second image, described in \cite{opticalflow}. The optical flow method has parameters to tune as well. 
 
 The interest points in the first image are found using the OpenCV methods
 \verb|cvGoodFeaturesToTrack| and \verb|cvFindCornerSubPix|, described in
@@ -105,47 +106,13 @@ The interest points in the first image are found using the OpenCV methods
 The \verb|cvFindHomography| method then uses correspondences in those points to
 compute an image-wide homography that is then used to construct the mosaic. 
 
-\subsection{Parameters in OpenCV Methods}
-
-The various parameters tuned for the OpenCV methods are as follows (written in order as they appear on \cite{cvhomogs, points}:
-
-\begin{itemize}
-
-\item \verb|cvGoodFeaturesToTrack|
-
-\begin{itemize}
-
-\item  
-
-\end{itemize} 
-
-\item \verb|cvFindCornerSubPix|
-
-\begin{itemize}
-
-\item  
-
-\end{itemize} 
-
-\item \verb|cvCalcOpticalFlowPyrLK|
-
-\begin{itemize}
-
-\item   
-
-\end{itemize} 
-
-\item \verb|cvFindHomography|
-
-\begin{itemize}
-
-\item  
-
-\end{itemize} 
-
-\end{itemize}
+The code is given in \ref{apdx:code} and the information about adjusting parameters in all the functions is given in \ref{apdx:params}.
 
 \section{Detecting a Closed Loop}
+
+Based on the factorization of a homography discussed in \ref{factoring},
+various components of a homography matrix can be factored out and used in an
+algorithm to detect a closed loop. 
 
 TODO
 
@@ -248,8 +215,15 @@ $H^{\textnormal{optimized}}$ cannot be very different from $1$.
 
 TODO
 
-\section{Discussion and Additional Points of Consideration}
+\section{Discussion}
 
+TODO
+
+\section{Potential Further Work}
+
+masks for detecting features
+
+breaking up the image
 TODO
 
 \section{Conclusion}
@@ -262,8 +236,287 @@ TODO
 
 \bibitem{cvhomogs} \url{http://opencv.willowgarage.com/documentation/camera_calibration_and_3d_reconstruction.html}
 
-\bibitem{points} \url{http://opencv.willowgarage.com/documentation/cpp/imgproc_feature_detection.html}
+\bibitem{points} \url{http://opencv.willowgarage.com/documentation/feature_detection.html}
+
+\bibitem{opticalflow} \url{http://opencv.willowgarage.com/documentation/c/video_motion_analysis_and_object_tracking.html}
 
 \end{thebibliography}
+
+\appendix
+
+\section{Homography Calculation Code}
+\label{apdx:code}
+
+The following is code to compute the features to track in the first image.
+
+\begin{verbatim}
+    IplImage* imgfirstBW = cvCreateImage(cvSize(imgWidth, imgHeight), IPL_DEPTH_8U, 1);
+    CvPoint2D32f* cornersA = new CvPoint2D32f[MAX_CORNERS];
+     IplImage* eig_image = cvCreateImage(cvSize(imgWidth, imgHeight), IPL_DEPTH_8U, 1);
+    IplImage* tmp_image = cvCreateImage(cvSize(imgWidth, imgHeight), IPL_DEPTH_8U, 1);
+    const int MAX_CORNERS = 500;
+    int corner_count = MAX_CORNERS;
+ 
+    //not shown: saving image to imgfirstBW
+
+    //compute the features to track from the first image
+    cvGoodFeaturesToTrack(imgfirstBW, eig_image, tmp_image, cornersA, &corner_count, 0.01, 5.0, NULL, 3, 1, 0.04);
+    cvFindCornerSubPix(
+        imgfirstBW, 
+        cornersA, 
+        corner_count, 
+        cvSize(10, 10), 
+        cvSize(-1, -1), 
+        cvTermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 20, 0.03));
+\end{verbatim}
+
+This code is used to calculate the optical flow between two images and convert
+the computed array of points into a matrix that can be used for the homography
+method.
+
+\begin{verbatim}
+    IplImage* imgBW = cvCreateImage(cvSize(imgWidth, imgHeight), IPL_DEPTH_8U, 1);
+    IplImage* pyr1 = cvCreateImage(cvSize(imgWidth, imgHeight), IPL_DEPTH_8U, 1);
+    IplImage* pyr2 = cvCreateImage(cvSize(imgWidth, imgHeight), IPL_DEPTH_8U, 1);
+    CvPoint2D32f* cornersB = new CvPoint2D32f[MAX_CORNERS];
+    char features_found[MAX_CORNERS];
+    float feature_errors[MAX_CORNERS];    
+    CvMat* PointImg1;
+    CvMat* PointImg2;
+
+    //not shown: saving the image to imgBW
+
+    //compute homography with first image and the new image
+    cvCalcOpticalFlowPyrLK(
+        imgfirstBW, 
+        imgBW,
+        pyr1,
+        pyr2,
+        cornersA,
+        cornersB,
+        corner_count,
+        cvSize(30, 30),
+        3, 
+        features_found,
+        feature_errors,
+        cvTermCriteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.03),
+        0 
+        );
+            
+    countfound = 0;
+    
+    //count how many matched features you get from the optical flow
+    for (int i = 0; i < corner_count; i++)
+    {
+        if (features_found[i] == 0 || feature_errors[i] > point_num_limit) {continue; }
+        countfound++;
+    }
+    if (countfound <= 0) {countfound = 1;}
+    PointImg1 = cvCreateMat(countfound, 2, CV_32F);
+    PointImg2 = cvCreateMat(countfound, 2, CV_32F);
+    countfound = 0;
+    matched_features = 0;
+    for (int i = 0; i < corner_count; i++)
+    {
+        if (features_found[i] == 0 || feature_errors[i] > point_num_limit) {continue; }
+        CvPoint p0 = cvPoint(cvRound(cornersA[i].x), cvRound(cornersA[i].y));
+        CvPoint p1 = cvPoint(cvRound(cornersB[i].x), cvRound(cornersB[i].y));
+        cvmSet(PointImg1, countfound, 0, p0.x);
+        cvmSet(PointImg1, countfound, 1, p0.y);
+        cvmSet(PointImg2, countfound, 0, p1.x);
+        cvmSet(PointImg2, countfound, 1, p1.y);
+        countfound++;
+
+        matched_features++;
+    }
+\end{verbatim}  
+
+The output of the above code is then used to calculate the homography between
+the images:
+
+\begin{verbatim}
+    CvMat* H = cvCreateMat(3, 3, CV_32FC1);
+    // get a singular homography if less than 5 points, but use
+    // 10 to guarantee that you can at least find 10 of them in
+    // the next image    
+    if (matched_features >= 10) {
+        cvFindHomography(PointImg2, PointImg1, H, CV_RANSAC, 1.0, NULL);
+    }
+    else{
+        cvSetIdentity(H);
+    }
+\end{verbatim}
+
+After this code is executed, $H$ contains the homography between the two
+images. 
+
+\section{Parameters in OpenCV Methods}
+\label{apdx:params}
+
+The various parameters tuned for the OpenCV methods are as follows (written in order as they appear on \cite{cvhomogs, points}:
+
+\begin{itemize}
+
+\item \verb|cvGoodFeaturesToTrack|: the goal of this function is to detect
+interest points in the first image
+
+\begin{itemize}
+
+\item[\texttt{const CvArr* image}] black and white image you're calculating the
+homography \textit{from}
+
+\item[\texttt{CvArr* eigImage}] temporary image the same size as \texttt{image}
+
+\item[\texttt{CvArr* tempImage}] another temporary image the same size as
+\texttt{image}
+
+\item[\texttt{CvPoint2D32f* corners}] an array of \texttt{CvPoint2D32f} where
+the location of corner points will be stored
+
+\item[\texttt{int cornerCount}] variable where the corner count will be stored
+
+\item[\texttt{double qualityLevel}] set to $0.01$ in the code; denotes the
+minimum quality parameter for accepting points in the corner count. Setting
+this higher means there will be more interest points and setting this lower
+means there will be fewer interest points. 
+
+\item[\texttt{double minDistance}] set to $5.0$ in the code; specifies the
+minimum distance between interest points. Setting this lower means there is
+the possibility for interest points to be clustered together more.
+
+\item[\texttt{const CvArr* mask = NULL}] set to \texttt{NULL} in the code;
+denotes the mask used to determine interest points in the image. I experimented
+with using different masks (i.e. the whole image, not including a 50-pixel
+border around the edge of the image) but it didn't yield good results. I did no
+formal tests of this with the entire pipeline, so there needs to be more
+thought put into the use of masks. See \ref{furtherwork} for more details.    
+
+\item[\texttt{int blockSize = 3}] set to $3$ in the code (the default in
+OpenCV); I did not play with this parameter, so I'm not sure on the effect it
+has on the detected features. 
+ 
+\item[\texttt{int useHarris=0}] set to $1$ in the code, so the function uses
+the Harris detector to detect corners in the image. 
+
+\item[\texttt{double k = 0.04}] set to $0.04$, the default value; Used by the
+Harris detector and I did not adjust this parameter. 
+
+\end{itemize} 
+
+\item \verb|cvFindCornerSubPix|: the goal of this function is to improve on
+estimates from the Harris detector in determining the location of interest
+points in the first image 
+
+\begin{itemize}
+
+\item[\texttt{const CvArr* image}] the first image in black and white (the same
+image the Harris detector was run)
+
+\item[\texttt{CvPoint2D32f* corners}] the same array of \texttt{CvPoint2D32f}
+that was passed to \texttt{cvGoodFeaturesToTrack} that contains the locations
+of the detected corners. At the end of the method will contain the updated
+positions of the interest points.
+
+\item[\texttt{int count}] the same \texttt{cornerCount} variable that was
+returned by the \texttt{cvGoodFeaturesToTrack} method for the number of
+detected corners
+
+\item[\texttt{CvSize win}] set to \texttt{cvSize(10, 10)} in the code; this
+defines the search space for the coordinate-refining in the method. I did not
+try different values of this parameter.
+
+\item[\texttt{CvSize zero\_zone}] set to \texttt{cvSize(-1, -1)}; a parameter
+used to calibrate false negatives, but setting it to $(-1, -1)$ does not try to
+exclude singularities. I did not try different values of this parameter. 
+
+\item[\texttt{CvTermCriteria criteria}] set to
+\texttt{cvTermCriteria(CV\_TERMCRIT\_ITER|CV\_TERMCRIT\_EPS, 20, 0.03)} as was set
+for another application and I did not try different values for this parameter;
+this specifies termination criteria for the algorithm
+
+\end{itemize} 
+
+\item \verb|cvCalcOpticalFlowPyrLK|: this function calculates the optical flow
+using the Lucas-Kanade method with pyramids between two images 
+
+\begin{itemize}
+
+\item[\texttt{const CvArr* prev}] the image at time $t$ in black and white 
+
+\item[\texttt{const CvArr* curr}] the image at time $t + dt$ in black and white
+
+\item[\texttt{const CvArr* prevPyr}] buffer pyramid for the first image.
+Initialized to the same size as the \texttt{prev} image.  
+
+\item[\texttt{const CvArr* currPyr}] same as \texttt{prevPyr} but for the
+second image  
+
+\item[\texttt{const CvPoint2D32f* prevFeatures}] the returned \texttt{corners}
+variable returned by the \texttt{cvFindCornerSubPix} method; these are the
+interest points for which the flow will be calculated in the second image
+
+\item[\texttt{const CvPoint2D32f* currFeatures}] an array of
+\texttt{CvPoint2D32f} types of the same size as \texttt{prevFeatures}; will
+contain the positions of the new points at the end of the method 
+
+\item[\texttt{int count}] the same variable as the output \texttt{cornerCount}
+variable from \texttt{cvFindCornerSubPix} that contains the number of feature
+points 
+
+\item[\texttt{CvSize winSize}] set to \texttt{cvSize(30, 30)}; defines the size
+of the window in which to look for the new position of the interest point.
+Setting this higher will give the ability to potentially find optical flow
+between two images that are less overlapping, but will also lead to more
+errors. I tried different values of the window size, but not against any formal
+tests.  
+
+\item[\texttt{int level}] set to $3$; the number of pyramid layers to use. I
+did not adjust this parameter.  
+
+\item[\texttt{char* status}] an empty array needs to be passed of the size of
+the maximum number of features possibly found; keeps track of which features
+were found in the second image  
+
+\item[\texttt{float* track\_error}] an empty array needs to be passed the size
+of the maximum number of features possibly found; keeps track of the error in
+detection.  
+
+\item[\texttt{CvTermCriteria\ criteria}] set to
+\texttt{cvTermCriteria(CV\_TERMCRIT\_ITER | CV\_TERMCRIT\_EPS, 20, 0.03)}. I did
+not try different parameters.  
+
+\item[\texttt{int flags}] set to $0$. 
+
+\end{itemize} 
+
+\item \verb|cvFindHomography|: Determines the homography matrix between two images and normalizes it to scale so that the $3, 3$ entry is $1$. 
+
+\begin{itemize}
+
+\item[\texttt{const CvMat* srcPoints}] The concatenated matrix of points output
+from \texttt{prevFeatures} output from \texttt{cvCalcOpticalFlowPyrLK}. The
+code for transforming from \texttt{prevFeatures} to \texttt{srcPoints} is given
+in \ref{apdx:code}. 
+
+\item[\texttt{const CvMat* dstPoints}] The same as \texttt{srcPoints} except
+for \texttt{currFeatures}.  
+
+\item[\texttt{CvMat* H}] A $3$ by $3$ matrix that will store the calculated
+homography.  
+
+\item[\texttt{int method=0}] Set to \texttt{CV\_RANSAC}; use the RANSAC method
+to calculate the homography to get rid of outliers in the detected points. 
+
+\item[\texttt{double ransacReprojThreshold=0}] Set to $1.0$; used for the
+RANSAC threshold in the algorithm.  
+
+\item[\texttt{CvMat* status=NULL}] Set to \texttt{NULL}; I did not experiment
+with this parameter.  
+
+\end{itemize} 
+
+\end{itemize}
+
+
 
 \end{document}

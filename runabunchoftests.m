@@ -80,13 +80,13 @@ function runabunchoftests
 
 runtest('test_set_16', 'testset16test11', .15, .15, .05, .01, 300, 225);
 %
-runtest('test_set_16', 'testset16test12', .15, .15, .01, .01, 120, 90);
+runtest('test_set_16', 'testset16test12', .10, .10, .01, .01, 280, 210);
 %
-%runtest('test_set_16', 'testset16test13', .20, .05, .01, .001, 120, 90);
+runtest('test_set_16', 'testset16test13', .20, .10, .01, .001, 120, 90);
 %
-%runtest('test_set_16', 'testset16test14', .20, .05, .01, .001, 120, 90);
+runtest('test_set_16', 'testset16test14', .10, .10, .01, .01, 120, 90);
 %
-%runtest('test_set_16', 'testset16test15', .20, .05, .01, .001, 120, 90);
+runtest('test_set_16', 'testset16test15', .20, .10, .01, .001, 280, 210);
 %
 
 end
