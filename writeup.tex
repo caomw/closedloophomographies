@@ -260,7 +260,9 @@ The following is code to compute the features to track in the first image.
     //not shown: saving image to imgfirstBW
 
     //compute the features to track from the first image
-    cvGoodFeaturesToTrack(imgfirstBW, eig_image, tmp_image, cornersA, &corner_count, 0.01, 5.0, NULL, 3, 1, 0.04);
+    cvGoodFeaturesToTrack(
+        imgfirstBW, eig_image, tmp_image, cornersA, 
+        &corner_count, 0.01, 5.0, NULL, 3, 1, 0.04);
     cvFindCornerSubPix(
         imgfirstBW, 
         cornersA, 

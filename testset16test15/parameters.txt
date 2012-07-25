@@ -1,0 +1,4 @@
+runtest('test_set_16', 'testset16test15', .20, .10, .01, .001, 280, 210);
+
+loop15includingfirstsq
+onlybasicconstraints15

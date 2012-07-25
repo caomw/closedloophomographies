@@ -83,7 +83,14 @@ def main():
 
         print '\n\n'
 
+    # optimization is to minimize the differences in each of the entries BASIC 
 
+    if (False):
+        print 'function f = optimizerdiffs' + str(last - first) + '(xin)'
+        print 'f = sum((x0 - xin).^2);'
+        print 'end'
+
+        print '\n\n\n'
 
     # linear constraint generation 
 
@@ -165,22 +172,22 @@ def main():
 
     # linear constraint generation INCLUDING FIRST HOMOGRAPHY only basic sontraints 
 
-    if (True):
+    if (False):
         print 'function [c, ceq] = onlybasicconstraints' + str(last - first) + '(x)\n ceq = [];'
         counter = 1;
         for i in xrange(first - 1 , last):
             print ('c(' + str(counter) + ':' + str(counter + 1) + 
-                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 1, 'twoi': 8*i + 2}
+                 ') = (x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)).^2 - changethresh;') % {'onei': 8*i + 1, 'twoi': 8*i + 2}
             counter += 2
-            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthreshx;') % {'onei': 8*i + 3}
+            print ('c(' + str(counter) + ') = (x(%(onei)d) - x0(%(onei)d)).^2 - transthreshx;') % {'onei': 8*i + 3}
             counter += 1
             print ('c(' + str(counter) + ':' + str(counter + 1) + 
-                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - changethresh;') % {'onei': 8*i + 4, 'twoi': 8*i + 5}
+                 ') = (x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)).^2 - changethresh;') % {'onei': 8*i + 4, 'twoi': 8*i + 5}
             counter += 2
-            print ('c(' + str(counter) + ') = abs(x(%(onei)d) - x0(%(onei)d)) - transthreshy;') % {'onei': 8*i + 6}
+            print ('c(' + str(counter) + ') = (x(%(onei)d) - x0(%(onei)d)).^2 - transthreshy;') % {'onei': 8*i + 6}
             counter += 1
             print ('c(' + str(counter) + ':' + str(counter + 1) + 
-                 ') = abs(x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)) - smallsmallthresh;') % {'onei': 8*i + 7, 'twoi': 8*i + 8}
+                 ') = (x(%(onei)d:%(twoi)d) - x0(%(onei)d:%(twoi)d)).^2 - smallsmallthresh;') % {'onei': 8*i + 7, 'twoi': 8*i + 8}
             counter += 2
         print 'end'
 
@@ -307,7 +314,21 @@ def main():
 
         print '\n\n\n'
 
-
+    # nonlinear constraints difference between truth and cumulative optimized
+    if (True):
+        print 'function [c, ceq] = constraintscumulative' + str(last - first) + '(x)'
+        print 'c = [];'
+        listofvarnames = []
+        for i in xrange(first - 1, last):
+            curx = ('x%(one)02d%(two)02d') % {'one': i, 'two': i + 1}
+            print (curx + ' = [x(' + str(8*i + 1) + '), x(' + str(8*i + 2) + 
+                    '), x(' + str(8*i + 3) + '); x(' + str(8 * i + 4) + '), x(' +
+                    str(8*i + 5) + '), x(' + str(8*i + 6) + '); x(' + str(8*i + 7) +
+                    '), x(' + str(8*i + 8) + '), 1];')
+            listofvarnames.append(curx)
+        print 'cumfromopt = ' + '*'.join(listofvarnames) + ';'
+        print 'ceq(1) = sum(sum((newHomo - cumfromopt).^2)) - detthresh;'
+        print 'end'
 
     # run test main function
 

@@ -62,6 +62,21 @@ function runabunchoftests
 %nofeasiblesolutions
 %runtest('test_set_16', 'testset16test12', .15, .15, .01, .01, 120, 90);
 %nofeasiblesolutions
+%runtest('test_set_16', 'testset16test11', .15, .15, .05, .01, 300, 225);
+%no feasible solution
+%runtest('test_set_16', 'testset16test13', .20, .10, .01, .001, 120, 90);
+%no feasible solution
+%runtest('test_set_16', 'testset16test14', .10, .10, .01, .01, 120, 90);
+%no feasible solution
+%runtest('test_set_16', 'testset16test11', .08, .08, .05, .0005, 280, 210);
+% no feasible solution
+%runtest('test_set_16', 'testset16test13', .20, .08, .01, .001, 280, 210);
+%no feasible solution
+%runtest('test_set_16', 'testset16test11', .08, .08, .05, .001, 280, 210);
+%nofeasiblesolution
+%runtest('test_set_16', 'testset16test12', 999, .02, 999, .0001, 30, 30);
+%nofeasiblesolution
+
 
 %runtest('test_set_16', 'testset16test6', .11, .05, .02, .0008, 300, 225);
 %localminimumfound
@@ -77,16 +92,16 @@ function runabunchoftests
 %local minimum possible
 %runtest('test_set_16', 'testset16test10', .20, .05, .01, .001, 150, 100);
 %local minimum found
+%runtest('test_set_16', 'testset16test11', 999, .03, 999, .0001, 40, 40);
+%localminimumfound
 
-runtest('test_set_16', 'testset16test11', .15, .15, .05, .01, 300, 225);
+runtest('test_set_16', 'testset16test11', 100000, 0.3, 999, 3, 50, 50);
 %
-runtest('test_set_16', 'testset16test12', .10, .10, .01, .01, 280, 210);
+%runtest('test_set_16', 'testset16test13', .20, .08, .01, .001, 280, 210);
 %
-runtest('test_set_16', 'testset16test13', .20, .10, .01, .001, 120, 90);
+%runtest('test_set_16', 'testset16test14', .10, .10, .01, .01, 120, 90);
 %
-runtest('test_set_16', 'testset16test14', .10, .10, .01, .01, 120, 90);
-%
-runtest('test_set_16', 'testset16test15', .20, .10, .01, .001, 280, 210);
+%runtest('test_set_16', 'testset16test15', .10, .10, .01, .01, 120, 90);
 %
 
 end

@@ -88,6 +88,7 @@ int main(int argc, const char* argv[])
     CvMat* KRt = cvCreateMat(2, 1, CV_32FC1);
     CvMat* KRcurtcum = cvCreateMat(2, 1, CV_32FC1);
     CvMat* nKRt = cvCreateMat(2, 1, CV_32FC1);
+    CvMat* nKRtcur = cvCreateMat(2, 1, CV_32FC1);
     CvMat* a13a23 = cvCreateMat(2, 1, CV_32FC1);
     CvMat* translation = cvCreateMat(2, 1, CV_32FC1);
     CvMat* K = cvCreateMat(2, 2, CV_32FC1);
@@ -95,8 +96,8 @@ int main(int argc, const char* argv[])
     CvMat* J = cvCreateMat(2, 2, CV_32FC1);
     CvMat* Hoverlap = cvCreateMat(3, 3, CV_32FC1);
     
-    double centerX = (mosaic->imgDoble->width)/2;// + imgWidth/2;
-    double centerY = (mosaic->imgDoble->height)/2;// + imgHeight/2;
+    double centerX = (mosaic->imgDoble->width)/2 - 3*imgWidth/4;
+    double centerY = (mosaic->imgDoble->height)/2 - 3*imgHeight/4;
  
     // spare variables for calculating homographies
     IplImage* eig_image = cvCreateImage(cvSize(imgWidth, imgHeight), IPL_DEPTH_8U, 1);
@@ -180,7 +181,7 @@ int main(int argc, const char* argv[])
                 //cvGetSubRect(H_all, KR, cvRect(0, 0, 2, 2));
                 cvGetSubRect(H, KR, cvRect(0, 0, 2, 2));
                 cvInvert(KR, KRinv, CV_SVD);
-                //cvGetSubRect(H_all, nKRt, cvRect(2, 0, 1, 2));
+               // cvGetSubRect(H_all, nKRtcur, cvRect(2, 0, 1, 2));
                 cvGetSubRect(H, nKRt, cvRect(2, 0, 1, 2));
                 cvGEMM(KRinv, nKRt, -1.0, NULL, 0, tcur, 0);
 //                printf("nKRt = \n");
@@ -230,6 +231,7 @@ int main(int argc, const char* argv[])
                
                 cvAdd(tcur, tcum, tcum);
                 cvGEMM(R, tcum, 1.0, NULL, 0, Rt, 0);
+                //cvGEMM(R, tcur, 1.0, NULL, 0, Rt, 0);
                 cvGEMM(K, Rt, 1.0, NULL, 0, KRt, 0);
 //                printf("tcum = \n");
 //                print_cv_matrix(tcum);
@@ -345,23 +347,25 @@ int main(int argc, const char* argv[])
  
                 cvSetZero(mosaic_recomp->imgDoble);
                 cvSetZero(mosaic_recomp->imgDobleLast);
-           
-                //redraw homographies using this new computed homographies
-                for (int i = firstimgnum; i <= cur_img; i++)
-                {
-                    sprintf(filename, "%s/homografia_new%04d.xml", test_name, i);
-                    H_recomp = (CvMat*)cvLoad(filename);
-                    
-                    //load the image
-                    sprintf(filename, "%s/mosaico%04d.tif", test_set_name, i);
-                    imgColorRecomp = cvLoadImage(filename);
-                    cvCvtColor(imgColorRecomp, imgBWRecomp, CV_BGR2GRAY);
+          
+                if (false){ 
+                    //redraw homographies using this new computed homographies
+                    for (int i = firstimgnum; i <= cur_img; i++)
+                    {
+                        sprintf(filename, "%s/homografia_new%04d.xml", test_name, i);
+                        H_recomp = (CvMat*)cvLoad(filename);
+                        
+                        //load the image
+                        sprintf(filename, "%s/mosaico%04d.tif", test_set_name, i);
+                        imgColorRecomp = cvLoadImage(filename);
+                        cvCvtColor(imgColorRecomp, imgBWRecomp, CV_BGR2GRAY);
 
-                    drawMosaic3(mosaic_recomp, imgColorRecomp, H_recomp, H_recomp_old, 3, 0, 0, 0);
-                    cvShowImage("recomputed_mosaic", mosaic_recomp->imgDoble);
+                        drawMosaic3(mosaic_recomp, imgColorRecomp, H_recomp, H_recomp_old, 3, 0, 0, 0);
+                        cvShowImage("recomputed_mosaic", mosaic_recomp->imgDoble);
 
-                    cvCopy(H_recomp, H_recomp_old, NULL);     
-                    waitKey(-1);
+                        cvCopy(H_recomp, H_recomp_old, NULL);     
+                        waitKey(-1);
+                    }
                 } 
             } 
         } 
@@ -371,17 +375,17 @@ int main(int argc, const char* argv[])
         //cvCircle(mosaic->imgDoble, cvPoint(0, 0), 5, CV_RGB(0, 0, 255), 2);
         
         
-//        cvCircle(mosaic->imgDoble, cvPoint(centerX, centerY), 5, CV_RGB(255, 0, 0), 2);       
-//        for (int i = 0; i <= cur_img - firstimgnum; i++)
-//        {
-////            printf("x = %d, y = %d\n", rtvecs[i].x, rtvecs[i].y);
-//            cvCircle(mosaic->imgDoble, cvPoint(centerX - cvRound(rtvecs[i].x), centerY - cvRound(rtvecs[i].y)), 5, CV_RGB(0, 255, 0), 2);
-//        }
+        cvCircle(mosaic->imgDoble, cvPoint(centerX, centerY), 5, CV_RGB(255, 0, 0), 2);       
+        for (int i = 0; i <= cur_img - firstimgnum; i++)
+        {
+//            printf("x = %d, y = %d\n", rtvecs[i].x, rtvecs[i].y);
+            cvCircle(mosaic->imgDoble, cvPoint(centerX - cvRound(rtvecs[i].x), centerY - cvRound(rtvecs[i].y)), 5, CV_RGB(0, 255, 0), 2);
+        }
 
         cvShowImage("mosaic", mosaic->imgDoble); 
 
-//        sprintf(filename, "%s/regmos%04d.tif", test_set_name, cur_img);
-//        cvSaveImage(filename, mosaic->imgDoble);
+        sprintf(filename, "%s/moswithtrans%04d.tif", test_name, cur_img);
+        cvSaveImage(filename, mosaic->imgDoble);
 
         cvCopy(H_all, H_old, NULL);
        
@@ -402,6 +406,7 @@ int main(int argc, const char* argv[])
     cvReleaseMat(&tcum);
     cvReleaseMat(&Rt);
     cvReleaseMat(&nKRt);
+    cvReleaseMat(&nKRtcur);
     cvReleaseMat(&KRt);
     cvReleaseMat(&KRcurtcum);
     cvReleaseMat(&a13a23);
