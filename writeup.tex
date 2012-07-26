@@ -108,12 +108,21 @@ compute an image-wide homography that is then used to construct the mosaic.
 
 The code is given in \ref{apdx:code} and the information about adjusting parameters in all the functions is given in \ref{apdx:params}.
 
+\section{Mosaicing}
+
+Mosaicing is the process of stitching images together to form a larger image.
+The homographies that were calculated between consecutive images are applied to
+each of the images in turn on a black canvas, overlapping the images in the
+same frame. The method \texttt{drawMosaic3} from the DOLBA project code was
+used for the image mosaicing step.  
+
 \section{Detecting a Closed Loop}
 
 Based on the factorization of a homography discussed in \ref{factoring},
 various components of a homography matrix can be factored out and used in an
 algorithm to detect a closed loop. 
 
+NEED TO TRY KcumRcumtcum before finishing typing this up
 TODO
 
 \section{Optimization Problem Formulation}

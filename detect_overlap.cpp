@@ -178,12 +178,12 @@ int main(int argc, const char* argv[])
         switch(detecttype){
             case 1: 
                 // make submatrices 
-                //cvGetSubRect(H_all, KR, cvRect(0, 0, 2, 2));
-                cvGetSubRect(H, KR, cvRect(0, 0, 2, 2));
+                cvGetSubRect(H_all, KR, cvRect(0, 0, 2, 2));
+                //cvGetSubRect(H, KR, cvRect(0, 0, 2, 2));
                 cvInvert(KR, KRinv, CV_SVD);
-               // cvGetSubRect(H_all, nKRtcur, cvRect(2, 0, 1, 2));
-                cvGetSubRect(H, nKRt, cvRect(2, 0, 1, 2));
-                cvGEMM(KRinv, nKRt, -1.0, NULL, 0, tcur, 0);
+                cvGetSubRect(H_all, nKRtcur, cvRect(2, 0, 1, 2));
+                //cvGetSubRect(H, nKRt, cvRect(2, 0, 1, 2));
+                cvGEMM(KRinv, nKRtcur, -1.0, NULL, 0, tcur, 0);
 //                printf("nKRt = \n");
 //                print_cv_matrix(nKRt);
     
@@ -243,7 +243,7 @@ int main(int argc, const char* argv[])
 //                printf("KRcurtcum = \n");
 //                print_cv_matrix(KRcurtcum);
 
-                rtvecs[cur_img - firstimgnum] = cvPoint(cvRound(cvmGet(KRcurtcum, 0, 0)), cvRound(cvmGet(KRcurtcum, 1, 0)));
+                rtvecs[cur_img - firstimgnum] = cvPoint(cvRound(-1*cvmGet(nKRtcur, 0, 0)), cvRound(-1*cvmGet(nKRtcur, 1, 0)));
                 
 //                cvInvert(KR, KRinv, CV_SVD);
 //                cvGEMM(KRinv, t, -1.0, NULL, 0, translation);
