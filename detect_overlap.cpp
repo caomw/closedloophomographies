@@ -92,7 +92,11 @@ int main(int argc, const char* argv[])
     CvMat* a13a23 = cvCreateMat(2, 1, CV_32FC1);
     CvMat* translation = cvCreateMat(2, 1, CV_32FC1);
     CvMat* K = cvCreateMat(2, 2, CV_32FC1);
+    CvMat* Kcum = cvCreateMat(2, 2, CV_32FC1);
+    cvSetIdentity(Kcum);
     CvMat* R = cvCreateMat(2, 2, CV_32FC1);
+    CvMat* Rcum = cvCreateMat(2, 2, CV_32FC1);
+    cvSetIdentity(Rcum);
     CvMat* J = cvCreateMat(2, 2, CV_32FC1);
     CvMat* Hoverlap = cvCreateMat(3, 3, CV_32FC1);
     
@@ -178,14 +182,15 @@ int main(int argc, const char* argv[])
         switch(detecttype){
             case 1: 
                 // make submatrices 
+                //printf("H:\n");
+                //print_cv_matrix(H);
                 cvGetSubRect(H_all, KR, cvRect(0, 0, 2, 2));
-                //cvGetSubRect(H, KR, cvRect(0, 0, 2, 2));
                 cvInvert(KR, KRinv, CV_SVD);
                 cvGetSubRect(H_all, nKRtcur, cvRect(2, 0, 1, 2));
-                //cvGetSubRect(H, nKRt, cvRect(2, 0, 1, 2));
+                cvGetSubRect(H, nKRt, cvRect(2, 0, 1, 2));
                 cvGEMM(KRinv, nKRtcur, -1.0, NULL, 0, tcur, 0);
-//                printf("nKRt = \n");
-//                print_cv_matrix(nKRt);
+                printf("nKRt = \n");
+                print_cv_matrix(nKRt);
     
 //                printf("tcur = \n");
 //                print_cv_matrix(tcur);
@@ -230,9 +235,11 @@ int main(int argc, const char* argv[])
 //                print_cv_matrix(Rt);
                
                 cvAdd(tcur, tcum, tcum);
-                cvGEMM(R, tcum, 1.0, NULL, 0, Rt, 0);
+                cvGEMM(R, Rcum, 1.0, NULL, 0, Rcum, 0);
+                cvGEMM(K, Kcum, 1.0, NULL, 0, Kcum, 0);
+                cvGEMM(Rcum, tcum, 1.0, NULL, 0, Rt, 0);
                 //cvGEMM(R, tcur, 1.0, NULL, 0, Rt, 0);
-                cvGEMM(K, Rt, 1.0, NULL, 0, KRt, 0);
+                cvGEMM(Kcum, Rt, 1.0, NULL, 0, KRt, 0);
 //                printf("tcum = \n");
 //                print_cv_matrix(tcum);
  
@@ -243,7 +250,7 @@ int main(int argc, const char* argv[])
 //                printf("KRcurtcum = \n");
 //                print_cv_matrix(KRcurtcum);
 
-                rtvecs[cur_img - firstimgnum] = cvPoint(cvRound(-1*cvmGet(nKRtcur, 0, 0)), cvRound(-1*cvmGet(nKRtcur, 1, 0)));
+                rtvecs[cur_img - firstimgnum] = cvPoint(cvRound(cvmGet(tcur, 0, 0)), cvRound(cvmGet(tcur, 1, 0)));
                 
 //                cvInvert(KR, KRinv, CV_SVD);
 //                cvGEMM(KRinv, t, -1.0, NULL, 0, translation);
@@ -376,10 +383,11 @@ int main(int argc, const char* argv[])
         
         
         cvCircle(mosaic->imgDoble, cvPoint(centerX, centerY), 5, CV_RGB(255, 0, 0), 2);       
+        double scale = 1.0/3;
         for (int i = 0; i <= cur_img - firstimgnum; i++)
         {
 //            printf("x = %d, y = %d\n", rtvecs[i].x, rtvecs[i].y);
-            cvCircle(mosaic->imgDoble, cvPoint(centerX - cvRound(rtvecs[i].x), centerY - cvRound(rtvecs[i].y)), 5, CV_RGB(0, 255, 0), 2);
+            cvCircle(mosaic->imgDoble, cvPoint(centerX - scale*cvRound(rtvecs[i].x), centerY - scale*cvRound(rtvecs[i].y)), 5, CV_RGB(0, 255, 0), 2);
         }
 
         cvShowImage("mosaic", mosaic->imgDoble); 
@@ -412,7 +420,9 @@ int main(int argc, const char* argv[])
     cvReleaseMat(&a13a23);
     cvReleaseMat(&translation);
     cvReleaseMat(&R);
+    cvReleaseMat(&Rcum);
     cvReleaseMat(&K);
+    cvReleaseMat(&Kcum);
     cvReleaseMat(&J);    
     cvReleaseMat(&Hoverlap);    
     cvReleaseImage(&imgColor);

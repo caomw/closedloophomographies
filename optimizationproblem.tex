@@ -8,7 +8,7 @@ homographies.
 
 There is a closed loop detected between image $1$ and image $n$. Each
 homography computed by the mosaicing algorithm, $H_{i, i + 1}$, is the
-homograhy from image $i$ to the next image $i + 1$, computed using OpenCV (and
+homography from image $i$ to the next image $i + 1$, computed using OpenCV (and
 RANSAC). Once the closed loop is detected, the homography $H_{1, n}$ is
 computed between image $1$ and the overlap image $n$. 
 
@@ -17,7 +17,7 @@ between
  
 \[H_{1, 2} \cdot H_{2, 3} \cdots H_{n - 2, n - 1} \cdot H_{n - 1, n} - H_{1, n} = 0\]
 
-which can be written as
+Which can be written as
 
 \[H_{1, n}^{\textnormal{cumulative}} - H_{1, n} = 0.\]
 
@@ -37,7 +37,7 @@ will try using those components as variables as well.} The optimizer will yield
 $n$ new homography matrices $H_{i, i+1}^{\textnormal{optimized}}$. 
 
 The optimizer tries to minimize this nonlinear multivariable function according
-to the following constrants:
+to the following constraints:
 
 \begin{enumerate}
 

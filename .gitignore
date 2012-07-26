@@ -17,3 +17,8 @@ scratch.nb
 #LateX for-compiler things
 *.aux
 *.log
+*.toc
+
+#miscellaneous files
+*.swp
+*.swo

@@ -1,5 +1,6 @@
 \documentclass{article}
 \usepackage{amsmath, amssymb, amsthm, enumerate, url}
+\usepackage{graphicx}
 
 \title{Using Closed-Loop Detection to Improve Homography Estimation and Mosaicing}
 \author{Michele Pratusevich}
@@ -33,6 +34,15 @@ detecting a closed loop in an image sequence are discussed. Then the
 optimization problem for improving the homography matrices is described in
 terms of formulation and the constraints. Lastly, further considerations and
 ideas are discussed. 
+
+The high-level structure for the process of correcting an image mosaic using
+closed loop information is as follows:
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=3cm]{highleveldiaf.png}
+\caption{The high-level work flow for optimizing the image mosaic.}
+\end{figure}
 
 \section{Homographies}
 
@@ -83,7 +93,7 @@ dilation in the $z$ direction.
 \subsection{Computing the Homography Matrices in Code: Overview}
 
 The homography matrices can be computed using an OpenCV method called
-\verb|cvFindHomography|, described in \cite{cvhomog}, which needs to be tuned
+\verb|cvFindHomography|, described in \cite{cvhomogs}, which needs to be tuned
 according to the application you are working with. For instance, the window
 size that is needed to find a correct homography depends on how close the
 camera is to the scene in question. 
@@ -106,7 +116,8 @@ The interest points in the first image are found using the OpenCV methods
 The \verb|cvFindHomography| method then uses correspondences in those points to
 compute an image-wide homography that is then used to construct the mosaic. 
 
-The code is given in \ref{apdx:code} and the information about adjusting parameters in all the functions is given in \ref{apdx:params}.
+The code is given in \ref{apdx:code} and the information about adjusting
+parameters in all the functions is given in \ref{apdx:params}.
 
 \section{Mosaicing}
 
@@ -118,12 +129,177 @@ used for the image mosaicing step.
 
 \section{Detecting a Closed Loop}
 
-Based on the factorization of a homography discussed in \ref{factoring},
-various components of a homography matrix can be factored out and used in an
-algorithm to detect a closed loop. 
+\subsection{Overview}
 
-NEED TO TRY KcumRcumtcum before finishing typing this up
-TODO
+The general idea is to detect the presence of a closed loop in an image
+sequence using information from the images alone, that is not very
+computationally intensive. To mosaic images, the homography between them must
+be computed, so finding a way to use the already-computed homography matrices
+to determine the presence of a closed loop is a good use of information that is
+already computed. 
+
+\subsection{Method}
+\label{sec:subm}
+
+Based on the factorization of a homography discussed in section \ref{factoring},
+various components of a homography matrix can be factored out and used in an
+algorithm to detect a closed loop. There are a number of approaches you can
+take, all of which I will describe here.
+
+\begin{enumerate}
+
+\item \textbf{Submatrix of homography matrix}
+
+According to the factorization described in section \ref{factoring}, the
+subvector in the top right corner of the homography matrix (entries $(1, 3)$
+and $(2, 3)$) represents $-KR\mathbf{t}$ and could be used as an approximation
+to the translation. 
+
+\item \textbf{Cumulative translation vector} 
+
+The general idea is this: when you factor each homography matrix $H_{i, i + 1}$
+as you compute it between two consecutive images, you compute the translation
+change $\mathbf{t}_{i, i + 1}$. Keep track of a cumulative translation vector
+$\mathbf{t}_{1, k}$ by adding each of the previously-computed translation
+vectors. The translation vector computed is the ``general translation'' for
+that particular homography. It does not necessarily represent the translation
+of the center of the image - it represents the ``average'' (for some sense of
+the word average) translation between the image and the previous image. If the
+translation component of each pixel in the image were to be computed, the
+translation vector would represent the average of all these vectors.
+
+To compute the translation vector $\mathbf{t}$ use the following steps:
+
+\begin{itemize}
+
+\item First compute $-KR\mathbf{t}$ by taking the $(1, 3)$ and $(2, 3)$ entries
+in the $H_{i, i + 1}$ matrix.
+
+\item Next compute $KR$ by taking the $2$ by $2$ submatrix of $H_{i, i + 1}$
+that starts in the top left corner.
+
+\item Compute the inverse of $KR$.
+
+\item Using this vector and matrix, $\mathbf{t} = -(KR)^{-1}(-KR\mathbf{t})$.  
+
+\end{itemize}
+
+To see the code excerpt for computing $\mathbf{t}$, refer to Appendix \ref{apdx:t}.
+
+The translation for the first image is $(0, 0)$ (since the homography for the
+first image is the identity matrix), so the other translation vectors can be
+thought of as the new position of the center of the image. Really it is the new
+position of the center of mass of the image, but thinking of it as the
+translation of the center is a good approximation. 
+
+\item \textbf{Translation vector from cumulative homography}
+
+Instead of factoring the homography matrices between images $i$ and $i + 1$,
+use the computed cumulative homography matrix in the same way (factoring) to
+extract the translation estimation from the cumulative homography, instead of
+needing to keep track of the cumulative translation. Much like in the previous
+option, factor $\mathbf{t}$ from the submatrices of the cumulative homography
+matrix.  
+
+\end{enumerate}
+
+\subsection{Closed loop metric}
+\label{sec:clmetric}
+
+Regardless of which method is used to compute the ``translation'', the method
+and metric for determining whether there is a closed loop in the image is the
+same. 
+
+To determine whether there is a closed loop in the image, use the translation
+vector approximation determined using one of the techniques described above. If
+the new center of the image falls within the maximally-inscribed ellipse
+inscribed in the first image, then it is possible that enough of the second
+image overlaps with the first image to compute a new homography. That is, if
+
+\[\mathbf{t} = \begin{pmatrix} t_x \\ t_y \end{pmatrix}\]
+
+And if 
+
+\[\frac{t_x^2}{(\frac{\textnormal{imgWidth}}{2})^2} + \frac{t_y^2}{(\frac{\textnormal{imgHeight}}{2})^2} \leq 1\]
+
+Then image $i + 1$ overlaps with the first image in the sequence.
+
+\subsubsection{Problems and a correction factor}
+
+There are some problems with this approach of attempting to determine the
+presence of a closed loop from the computed image homographies.
+
+The problem that this approach is initially meant to solve makes the estimation
+of the true translation vector difficult, mainly because the homography
+computations inherently are error-prone. The summation of translation vectors
+from image to image just compounds the error present in each of the individual
+homography computations. 
+
+This means that the estimation of the center of the image from the cumulative
+translation vector is not completely accurate, so there needs to be some kind
+of correction factor in the elliptical equation to account for the drift in the
+homographies. So the actual equation used to determine whether there is an
+overlap between the current image and the first image is
+
+\[\frac{t_x^2}{(\frac{\textnormal{imgWidth} \cdot \textnormal{scaleFactor}}{2})^2} + \frac{t_y^2}{(\frac{\textnormal{imgHeight} \cdot \textnormal{scaleFactor}}{2})^2} \leq 1\]
+
+Using a scale factor of $1.5$ yields good results, yielding many false
+positives. However, having strict conditions to enter the optimization phase
+alleviates the need to minimize false positives in closed loop detection. In
+fact, the more potential closed loops that are detected, the more opportunity
+for optimization and adjustment. So if an image is prematurely detected as
+overlapping with the original image and ends up satisfying the criteria for
+entering the optimization phase, then the mosaic will be adjusted earlier.
+
+\subsection{Translation tracking examples}
+
+The following are two examples of tracking the centers of the images using the
+algorithms detected above. 
+
+In this example, there are $49$ images in this closed loop sequence. 
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=6cm]{centers_imgs/test_set_15_nKRt_YES/moswithtrans0049_edit.jpg}
+\caption{Computed using the submatrix of the cumulative homography matrix}
+\end{figure} 
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=6cm]{centers_imgs/test_set_15_tcum_YES/moswithtrans0049_edit.jpg}
+\caption{Computed using the cumulative translation vector}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=6cm]{centers_imgs/test_set_15_t_from_h_all_YES/moswithtrans0049_edit.jpg}
+\caption{Computed using the translation vector from the cumulative homography}
+\end{figure}
+
+From these three images it is evident that any of these three methods can be
+possible valid ways of estimating the translation vector from the homography
+matrices. Determining the most effective method for determining closed loops
+would require more test data sets and running many tests, comparing against a
+standard metric. 
+
+\subsection{Another closed-loop estimation possibility}
+
+A potential possibility for determining the presence of a closed-loop is to use
+the same overlap metric as described in Section \ref{sec:clmetric} but using a
+different technique altogether for estimating the translation component of the
+images.
+
+In this technique, instead of using homography decomposition and factoring, the
+idea would be to use computation to estimate the positions of the centers of
+the images using direct transformation. The center of the first image would be
+without loss of generality assumed to be at $(0, 0, 1)$ (because all vectors
+are in 3D space). When the cumulative homography for image $k$ ($H_{1, k}$) is
+calculated, it will be multiplied to this center vector to determine the
+position of the new center. However, this technique is actually the same as
+using the submatrix from the cumulative homography matrix as described in
+Section \ref{sec:subm}, because multiplying the homography matrix by $(0, 0,1)$ 
+will just yield the $(1, 3)$ and $(2, 3)$ entries of the matrix. So there
+is no need to try this method as a way of estimating image translation vectors.  
 
 \section{Optimization Problem Formulation}
 
@@ -136,6 +312,12 @@ homography from image $i$ to the next image $i + 1$, computed using OpenCV (and
 RANSAC). Once the closed loop is detected, the homography $H_{1, n}$ is
 computed between image $1$ and the overlap image $n$. 
 
+There are two possible formulations of the optimization that I will discuss. I
+have tried both of them to varied success, as I will also describe with each
+section. 
+
+\subsection{Objective Function Minimizing the Cumulative Error}
+
 Overall, the goal of the optimization algorithm is to minimize the error
 between
  
@@ -145,11 +327,13 @@ Which can be written as
 
 \[H_{1, n}^{\textnormal{cumulative}} - H_{1, n} = 0.\]
 
+\subsubsection{Objective function}
+
 Using a scalar formulation of the problem, the error is calculated by
-calculating the sum of the absolute values of the differences between the
+calculating the sum of the squares of the differences between the
 cumulative and new homographies for each component in the matrix.
 
-\[\sum_{i,j} |(H_{1, n}^{\textnormal{cumulative}})_{ij} - (H_{1, n})_{ij}|.\]
+\[\sum_{i,j} ((H_{1, n}^{\textnormal{cumulative}})_{ij} - (H_{1, n})_{ij})^2.\]
 
 The variables given to the optimizer are the $8$ parameters in each of the
 matrices $H_{i, i + 1}$ (each entry of the homography matrix except for the $3,
@@ -160,15 +344,12 @@ variables too, but for now I've implemented the code to consider it as truth. I
 will try using those components as variables as well.} The optimizer will yield
 $n$ new homography matrices $H_{i, i+1}^{\textnormal{optimized}}$. 
 
+\subsubsection{Constraints}
+
 The optimizer tries to minimize this nonlinear multivariable function according
 to the following constraints:
 
 \begin{enumerate}
-
-\item The new matrices that are computed must be homography matrices (i.e.
-still have determinant close to $1$).
-
-\[|\det(H_{i, i+1}) - 1| \leq \textnormal{determinant\_threshold } \forall i \in (1, n-1)\] 
 
 \item The variables in each matrix can't change ``too much.'' There are a few
 ways to implement this:
@@ -179,48 +360,81 @@ ways to implement this:
 this range being different depending on which component in the homography it
 is):
 
-\[|(H_{i, i+1})_{1, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 1}| \leq \textnormal{change\_threshold}\] 
-\[|(H_{i, i+1})_{1, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 2}| \leq \textnormal{change\_threshold}\] 
-\[|(H_{i, i+1})_{2, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 1}| \leq \textnormal{change\_threshold}\] 
-\[|(H_{i, i+1})_{2, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 2}| \leq \textnormal{change\_threshold}\] 
-\[|(H_{i, i+1})_{3, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 1}| \leq \textnormal{pixel\_threshold}\] 
-\[|(H_{i, i+1})_{3, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 2}| \leq \textnormal{pixel\_threshold}\] 
-\[|(H_{i, i+1})_{1, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 3}| \leq \textnormal{small\_threshold}\] 
-\[|(H_{i, i+1})_{2, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 3}| \leq \textnormal{small\_threshold}\] 
+\[((H_{i, i+1})_{1, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 1})^2 \leq \textnormal{change\_threshold}\] 
+\[((H_{i, i+1})_{1, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 2})^2 \leq \textnormal{change\_threshold}\] 
+\[((H_{i, i+1})_{2, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 1})^2 \leq \textnormal{change\_threshold}\] 
+\[((H_{i, i+1})_{2, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 2})^2 \leq \textnormal{change\_threshold}\] 
+\[((H_{i, i+1})_{3, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 1})^2 \leq \textnormal{pixel\_threshold}\] 
+\[((H_{i, i+1})_{3, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 2})^2 \leq \textnormal{pixel\_threshold}\] 
+\[((H_{i, i+1})_{1, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 3})^2 \leq \textnormal{small\_threshold}\] 
+\[((H_{i, i+1})_{2, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 3})^2 \leq \textnormal{small\_threshold}\] 
 
-The reason each entry (or group of entries) should have it`s own threshold is
+The reason each entry (or group of entries) should have it's own threshold is
 that each component of the homography matrix is related to a different
 transformation and has different similarity tolerances. 
 
-\item The total change in all the variables of a particular matrix can`t exceed a certain value.
+\item The total change in all the variables of a particular matrix can't exceed a certain value.
 
-\[|\sum_{i, j} (H_{k, k+1})_{i, j}| \leq \textnormal{sum\_thresh}\]
+\[\sum_{i, j} |(H_{k, k+1})_{i, j}| \leq \textnormal{sum\_thresh}\]
 
-I don`t like this way because it does not account for two very large changes in
-two variables - i.e. if component $(1, 1)$ changes by $-100$ and component $(3,
-3)$ changes by $+99$, it seems that there wasn't that much change in total
-whereas in reality the new homography matrix is very different from the old
-homography matrix.
+I don't like this method very much because the components more related to the
+translation can change more than the components related to rotation (and
+sometimes will) but this method will not take that into effect. 
 
 \item Factor the new homography matrix and allow not ``too much'' of a change
-from the new translation and rotation components.   
+from the new translation and rotation components. The drawback of this is that
+it is much more computationally intensive and most likely will not be able to
+be used for real-time applications further down the line. The factorization
+would be done as described above in Section \ref{factoring}. However, it is
+probably more accurate in terms of potential thresholds of change for the
+individual matrix components, since it will be related to the actual components
+instead of the components in the matrix. 
 
 \item Don't care about changes between each of the individual homographies but
-care about the changes in all the cumulative homographies. 
+care about the changes in all the cumulative homographies. This is more
+computationally intensive for the optimizer, since it has to do many many
+matrix multiplications with every iteration of the optimizing function.  
 
 \end{enumerate} 
 
 Right now my code uses the \ref{indiv_thresh} metric of ``too much change.''
 
+\item The new matrices that are computed must be homography matrices (i.e.
+still have determinant close to $1$).
+
+\[(\det(H_{i, i+1}) - 1)^2 \leq \textnormal{determinant\_threshold } \forall i \in (1, n-1)\] 
+
 \item The $3, 3$ entry of all the intermediate homographies computed with
 $H^{\textnormal{optimized}}$ cannot be very different from $1$.
 
+It is possible that this condition becomes obsolete if the ``too much
+change'' condition is already instituted. 
+
 \[\textnormal{Let } H_{1, k}^{\textnormal{optimized}} = H_{1, 2}^{\textnormal{optimized}} \cdots H_{k - 1, k}^{\textnormal{optimized}}\]
-\[|(H_{1, k}^{\textnormal{optimized}})_{3, 3} - 1| \leq \textnormal{entry33\_threshold } \forall k \in (2, n)\]
+\[((H_{1, k}^{\textnormal{optimized}})_{3, 3} - 1)^2 \leq \textnormal{entry33\_threshold } \forall k \in (2, n)\]
+
+It is possible that this condition becomes obsolete if the ``too much
+change'' condition is already instituted. 
 
 \end{enumerate}
 
-\section{Results}
+\subsubsection{Results}
+
+TODO
+
+\subsection{Objective Function Minimizing Error in Individual Homographies}
+
+TODO
+
+\subsubsection{Objective Function}
+
+TODO
+
+\subsubsection{Constraints}
+
+TODO
+
+\subsubsection{Results}
 
 TODO
 
@@ -229,6 +443,7 @@ TODO
 TODO
 
 \section{Potential Further Work}
+\label{sec:later}
 
 masks for detecting features
 
@@ -252,6 +467,9 @@ TODO
 \end{thebibliography}
 
 \appendix
+\section{All code}
+
+All of the code I've worked on (python scripts, MATLAB code, C++/OpenCV) are all on my github account: \url{https://github.com/mprat/closedloophomographies}.
 
 \section{Homography Calculation Code}
 \label{apdx:code}
@@ -400,7 +618,7 @@ denotes the mask used to determine interest points in the image. I experimented
 with using different masks (i.e. the whole image, not including a 50-pixel
 border around the edge of the image) but it didn't yield good results. I did no
 formal tests of this with the entire pipeline, so there needs to be more
-thought put into the use of masks. See \ref{furtherwork} for more details.    
+thought put into the use of masks. See \ref{sec:later} for more details.    
 
 \item[\texttt{int blockSize = 3}] set to $3$ in the code (the default in
 OpenCV); I did not play with this parameter, so I'm not sure on the effect it
@@ -528,6 +746,29 @@ with this parameter.
 
 \end{itemize}
 
+\section{Code for computing the translation vector}
+\label{apdx:t}
 
+The following is the OpenCV C++ code used to compute the translation vector for
+a particular image in a sequence. 
+
+\begin{verbatim}
+    CvMat* KR = cvCreateMat(2, 2, CV_32FC1);
+    CvMat* KRinv = cvCreateMat(2, 2, CV_32FC1);
+    CvMat* nKRt = cvCreateMat(2, 1, CV_32FC1);
+    CvMat* tcur = cvCreateMat(2, 1, CV_32FC1);
+    CvMat* tcum = cvCreateMat(2, 1, CV_32FC1);
+    
+    cvGetSubRect(H, KR, cvRect(0, 0, 2, 2));
+    cvInvert(KR, KRinv, CV_SVD);
+    cvGetSubRect(H, nKRt, cvRect(2, 0, 1, 2));
+    cvGEMM(KRinv, nKRt, -1.0, NULL, 0, tcur, 0);
+    cvAdd(tcur, tcum, tcum);
+\end{verbatim}
+
+\verb|H| is a $3$ by $3$ matrix holding the homography between the previous
+image $i$ and the current image $i + 1$. Now \verb|tcum| holds the cumulative
+translation vector to the current image $i + 1$. The vector \verb|tcum| must be
+set to zero before the execution of multiple iterations of this code. 
 
 \end{document}
