@@ -77,7 +77,24 @@ f = abs(xcum(1, 1) - newHomo(1, 1)) + abs(xcum(1, 2) - newHomo(1, 2)) + ...
 end
 
 function f = optimizerdiffs15(xin)
-f = sum((x0 - xin).^2);
+x0001 = [xin(1), xin(2), xin(3); xin(4), xin(5), xin(6); xin(7), xin(8), 1];
+x0102 = [xin(9), xin(10), xin(11); xin(12), xin(13), xin(14); xin(15), xin(16), 1];
+x0203 = [xin(17), xin(18), xin(19); xin(20), xin(21), xin(22); xin(23), xin(24), 1];
+x0304 = [xin(25), xin(26), xin(27); xin(28), xin(29), xin(30); xin(31), xin(32), 1];
+x0405 = [xin(33), xin(34), xin(35); xin(36), xin(37), xin(38); xin(39), xin(40), 1];
+x0506 = [xin(41), xin(42), xin(43); xin(44), xin(45), xin(46); xin(47), xin(48), 1];
+x0607 = [xin(49), xin(50), xin(51); xin(52), xin(53), xin(54); xin(55), xin(56), 1];
+x0708 = [xin(57), xin(58), xin(59); xin(60), xin(61), xin(62); xin(63), xin(64), 1];
+x0809 = [xin(65), xin(66), xin(67); xin(68), xin(69), xin(70); xin(71), xin(72), 1];
+x0910 = [xin(73), xin(74), xin(75); xin(76), xin(77), xin(78); xin(79), xin(80), 1];
+x1011 = [xin(81), xin(82), xin(83); xin(84), xin(85), xin(86); xin(87), xin(88), 1];
+x1112 = [xin(89), xin(90), xin(91); xin(92), xin(93), xin(94); xin(95), xin(96), 1];
+x1213 = [xin(97), xin(98), xin(99); xin(100), xin(101), xin(102); xin(103), xin(104), 1];
+x1314 = [xin(105), xin(106), xin(107); xin(108), xin(109), xin(110); xin(111), xin(112), 1];
+x1415 = [xin(113), xin(114), xin(115); xin(116), xin(117), xin(118); xin(119), xin(120), 1];
+x1516 = [xin(121), xin(122), xin(123); xin(124), xin(125), xin(126); xin(127), xin(128), 1];
+cumfromopt = x0001*x0102*x0203*x0304*x0405*x0506*x0607*x0708*x0809*x0910*x1011*x1112*x1213*x1314*x1415*x1516;
+f = sum((x0 - xin).^2) + sum(sum((cumfromopt - newHomo).^2));
 end
 
 function [c, ceq] = constraintscumulative15(x)
@@ -120,7 +137,8 @@ x1213 = [x(97), x(98), x(99); x(100), x(101), x(102); x(103), x(104), 1];
 x1314 = [x(105), x(106), x(107); x(108), x(109), x(110); x(111), x(112), 1];
 x1415 = [x(113), x(114), x(115); x(116), x(117), x(118); x(119), x(120), 1];
 x1516 = [x(121), x(122), x(123); x(124), x(125), x(126); x(127), x(128), 1];
-cumfromopt = x0001*x0102*x0203*x0304*x0405*x0506*x0607*x0708*x0809*x0910*x1011*x1112*x1213*x1314*x1415*x1516;
+cumfromopt = x0001*x0102*x0203*x0304*x0405*x0506*x0607*x0708*x0809*x0
+910*x1011*x1112*x1213*x1314*x1415*x1516;
 ceq(1) = sum(sum(abs((newHomo - cumfromopt)))) - detthresh;
 end
 
@@ -146,6 +164,7 @@ end
     c(4) = abs(det(x45) - 1) - detthresh;
     c(5) = abs(det(x56) - 1) - detthresh;
     c(6:7) = abs(x(1:2) - x0(1:2)) - changethresh;
+
     c(8:9) = abs(x(4:5) - x0(4:5)) - changethresh;
     c(10:11) = abs(x(9:10) - x0(9:10)) - changethresh;
     c(12:13) = abs(x(12:13) - x0(12:13)) - changethresh;

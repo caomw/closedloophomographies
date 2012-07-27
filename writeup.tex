@@ -364,10 +364,10 @@ is):
 \[((H_{i, i+1})_{1, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 2})^2 \leq \textnormal{change\_threshold}\] 
 \[((H_{i, i+1})_{2, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 1})^2 \leq \textnormal{change\_threshold}\] 
 \[((H_{i, i+1})_{2, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 2})^2 \leq \textnormal{change\_threshold}\] 
-\[((H_{i, i+1})_{3, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 1})^2 \leq \textnormal{pixel\_threshold}\] 
-\[((H_{i, i+1})_{3, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 2})^2 \leq \textnormal{pixel\_threshold}\] 
-\[((H_{i, i+1})_{1, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 3})^2 \leq \textnormal{small\_threshold}\] 
-\[((H_{i, i+1})_{2, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 3})^2 \leq \textnormal{small\_threshold}\] 
+\[((H_{i, i+1})_{1, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 3})^2 \leq \textnormal{pixel\_threshold\_x}\] 
+\[((H_{i, i+1})_{2, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 3})^2 \leq \textnormal{pixel\_threshold\_y}\] 
+\[((H_{i, i+1})_{3, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 1})^2 \leq \textnormal{small\_threshold}\] 
+\[((H_{i, i+1})_{3, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 2})^2 \leq \textnormal{small\_threshold}\] 
 
 The reason each entry (or group of entries) should have it's own threshold is
 that each component of the homography matrix is related to a different
@@ -420,39 +420,120 @@ change'' condition is already instituted.
 
 \subsubsection{Results}
 
-TODO
+The original mosaic, consisting of $16$ images, is shown here: 
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=6cm]{test_set_16/regmos0016_edit.jpg}
+\caption{The original mosaic without optimization}
+\end{figure}
+
+Trying the minimization function with a variety of different constraint
+threshold yielded mixed results, none of which were better than the original
+mosaic.
+
+The mosaic that performed the best was the optimization problem using only
+constraint \ref{indiv_thresh} with the following parameters:
+
+\begin{itemize}
+
+\item \verb|change_threshold| $=.10$ (used for components $(1, 1), (1, 2), (2, 1)$, and $(2, 2)$, related to the rotation.)
+
+\item \verb|small_threshold| $=.001$ (used for components $(3, 1)$ and $(3, 2)$, related to the dilation.)
+
+\item \verb|pixel_threshold_x| $= 300$ (used for component $(1, 2)$, related to the x-coordinate of translation.)
+
+\item \verb|pixel_threshold_y| $= 225$ (used for component $(1, 3)$, related to the y-coordinate of translation.)
+
+\end{itemize}  
+
+The result was this mosaic:
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=6cm]{testset16test9/cummosaic0016_edit.jpg}
+\caption{One example of optimized mosaic}
+\end{figure}
 
 \subsection{Objective Function Minimizing Error in Individual Homographies}
 
-TODO
+The goal of this optimization algorithm is to minimize the error between the
+initial and optimized homography matrices. That is, the error between 
+$H_{i, i + 1}$ and $H_{i, i+1}^{\textnormal{optimized}}$ is minimized.
 
 \subsubsection{Objective Function}
 
-TODO
+Using the scalar formulation of the problem, the objective function is
+calculated by taking the sum of square difference between the initial
+homography estimates and the optimized homography estimates. 
+
+\[\sum_i \sum_{j, k} ((H_{i, i + 1})_{j, k} - (H_{i, i + 1}^{\textnormal{optimized}})_{j, k})^2\] 
+
+The variables given to the optimizer are the 8 parameters in each of the
+matrices $H_{i, i + 1}$. The values of the $H_{1, n}$ matrix are used as
+initial estimates. The optimizer will yield $n$ new homography matrices $H_{i,
+i + 1}^{\textnormal{optimized}}$. 
 
 \subsubsection{Constraints}
 
-TODO
+The optimizer tries to minimize the objective function according to the
+following constraints:
+
+\begin{enumerate}
+
+\item The sum of squared differences between the cumulative homography
+calculated using the optimized homographies is the same as the closed-loop
+homography $H_{1, n}$ is zero.
+
+\[\sum_{j, k} ((H_{1, n})_{j, k} - (H_{1, n}^{\textnormal{optimized}})_{j, k})^2\] 
+
+The potential problem with this constraint is that it might be too strict - it
+says that there must be no difference between the closed-loop homography and
+the new optimized cumulative homography. Another possibility is to instead of
+having the error be zero, allowing the error to be below a threshold.
+
+\end{enumerate}
 
 \subsubsection{Results}
 
-TODO
+The constraints with this formulation of the problem yield no feasible
+solutions. 
 
 \section{Discussion}
 
-TODO
+The most immediate result that can be seen from this work is a new closed-loop
+detection scheme. I have proposed three main ways of estimating translation
+vectors using the factorization of the homographies, but a large-scale test
+with more datasets needs to be conducted to determine which estimation is more
+accurate. 
 
 \section{Potential Further Work}
 \label{sec:later}
 
-masks for detecting features
+While the objective of the work here is to use closed-loop homographies to
+better create image mosaics, closed-loop techniques are not the only possible
+solution. 
 
-breaking up the image
-TODO
+For example, the use of masks to determine which features to track
+during the optical flow/new homography calculation metric may yield better
+results than using the entire image. Using only a subset of the image for
+interest points will decrease the confounding of the homography matrix from the
+distortion effects at the edge of the field of vision.  
+
+Additionally, another potential solution is to break the image into sub-images,
+and compute homographies between sections of the image to other sections of the
+previous image. This also gets rid of distortion effects by tiling the images
+according to the most appropriate homography estimation. 
+
+A problem with this entire project is the lack of metrics for determining the
+accuracy of an image mosaic. To better be able to write automated tests of both
+various optimization parameters and closed-loop detection methods, 
 
 \section{Conclusion}
 
-TODO
+Right now, the highlight of this work is the new detection of a closed loop in
+a sequence of images. The optimization function is not yielding good results
+and still needs to be improved. 
 
 \begin{thebibliography}{1}
 
