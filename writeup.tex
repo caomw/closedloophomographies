@@ -308,7 +308,7 @@ homographies.
 
 There is a closed loop detected between image $1$ and image $n$. Each
 homography computed by the mosaicing algorithm, $H_{i, i + 1}$, is the
-homography from image $i$ to the next image $i + 1$, computed using OpenCV (and
+homography from image $i + 1$ to image $i$, computed using OpenCV (and
 RANSAC). Once the closed loop is detected, the homography $H_{1, n}$ is
 computed between image $1$ and the overlap image $n$. 
 
@@ -319,13 +319,11 @@ section.
 \subsection{Objective Function Minimizing the Cumulative Error}
 
 Overall, the goal of the optimization algorithm is to minimize the error
-between
- 
-\[H_{1, 2} \cdot H_{2, 3} \cdots H_{n - 2, n - 1} \cdot H_{n - 1, n} - H_{1, n} = 0\]
+between the calculated cumulative homography
 
-Which can be written as
+\[H_{0, 1} \cdot H_{1, 2} \cdot H_{2, 3} \cdots H_{n - 2, n - 1} \cdot H_{n - 1, n} = H_{0, n}^{\textnormal{cumulative}}\]
 
-\[H_{1, n}^{\textnormal{cumulative}} - H_{1, n} = 0.\]
+And the newly-computed homography $H_{0, n}$. 
 
 \subsubsection{Objective function}
 
@@ -333,16 +331,14 @@ Using a scalar formulation of the problem, the error is calculated by
 calculating the sum of the squares of the differences between the
 cumulative and new homographies for each component in the matrix.
 
-\[\sum_{i,j} ((H_{1, n}^{\textnormal{cumulative}})_{ij} - (H_{1, n})_{ij})^2.\]
+\[\sum_{i,j} ((H_{0, n}^{\textnormal{cumulative}})_{ij} - (H_{0, n})_{ij})^2.\]
 
 The variables given to the optimizer are the $8$ parameters in each of the
 matrices $H_{i, i + 1}$ (each entry of the homography matrix except for the $3,
 3$ entry, which is assumed to be $1$. The values of the $H_{1, n}$ matrix are
 not variables in the optimization function, but are taken as truth.
-\footnote{It is possible to use the components of the closed-loop matrix as
-variables too, but for now I've implemented the code to consider it as truth. I
-will try using those components as variables as well.} The optimizer will yield
-$n$ new homography matrices $H_{i, i+1}^{\textnormal{optimized}}$. 
+\footnote{I am modifying the code right now to include the parameters in the $H_{1, n}$ matrix as variables as well. } The optimizer will yield
+$n$ new homography matrices $H_{i, i+1}^{*}$. 
 
 \subsubsection{Constraints}
 
@@ -360,14 +356,14 @@ ways to implement this:
 this range being different depending on which component in the homography it
 is):
 
-\[((H_{i, i+1})_{1, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 1})^2 \leq \textnormal{change\_threshold}\] 
-\[((H_{i, i+1})_{1, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 2})^2 \leq \textnormal{change\_threshold}\] 
-\[((H_{i, i+1})_{2, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 1})^2 \leq \textnormal{change\_threshold}\] 
-\[((H_{i, i+1})_{2, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 2})^2 \leq \textnormal{change\_threshold}\] 
-\[((H_{i, i+1})_{1, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{1, 3})^2 \leq \textnormal{pixel\_threshold\_x}\] 
-\[((H_{i, i+1})_{2, 3} - (H_{i, i+1}^{\textnormal{optimized}})_{2, 3})^2 \leq \textnormal{pixel\_threshold\_y}\] 
-\[((H_{i, i+1})_{3, 1} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 1})^2 \leq \textnormal{small\_threshold}\] 
-\[((H_{i, i+1})_{3, 2} - (H_{i, i+1}^{\textnormal{optimized}})_{3, 2})^2 \leq \textnormal{small\_threshold}\] 
+\[((H_{i, i+1})_{1, 1} - (H_{i, i+1}^{*})_{1, 1})^2 \leq \textnormal{change\_threshold}\] 
+\[((H_{i, i+1})_{1, 2} - (H_{i, i+1}^{*})_{1, 2})^2 \leq \textnormal{change\_threshold}\] 
+\[((H_{i, i+1})_{2, 1} - (H_{i, i+1}^{*})_{2, 1})^2 \leq \textnormal{change\_threshold}\] 
+\[((H_{i, i+1})_{2, 2} - (H_{i, i+1}^{*})_{2, 2})^2 \leq \textnormal{change\_threshold}\] 
+\[((H_{i, i+1})_{1, 3} - (H_{i, i+1}^{*})_{1, 3})^2 \leq \textnormal{pixel\_threshold\_x}\] 
+\[((H_{i, i+1})_{2, 3} - (H_{i, i+1}^{*})_{2, 3})^2 \leq \textnormal{pixel\_threshold\_y}\] 
+\[((H_{i, i+1})_{3, 1} - (H_{i, i+1}^{*})_{3, 1})^2 \leq \textnormal{small\_threshold}\] 
+\[((H_{i, i+1})_{3, 2} - (H_{i, i+1}^{*})_{3, 2})^2 \leq \textnormal{small\_threshold}\] 
 
 The reason each entry (or group of entries) should have it's own threshold is
 that each component of the homography matrix is related to a different
@@ -410,8 +406,8 @@ $H^{\textnormal{optimized}}$ cannot be very different from $1$.
 It is possible that this condition becomes obsolete if the ``too much
 change'' condition is already instituted. 
 
-\[\textnormal{Let } H_{1, k}^{\textnormal{optimized}} = H_{1, 2}^{\textnormal{optimized}} \cdots H_{k - 1, k}^{\textnormal{optimized}}\]
-\[((H_{1, k}^{\textnormal{optimized}})_{3, 3} - 1)^2 \leq \textnormal{entry33\_threshold } \forall k \in (2, n)\]
+\[\textnormal{Let } H_{1, k}^{*} = H_{1, 2}^{*} \cdots H_{k - 1, k}^{*}\]
+\[((H_{1, k}^{*})_{3, 3} - 1)^2 \leq \textnormal{entry33\_threshold } \forall k \in (2, n)\]
 
 It is possible that this condition becomes obsolete if the ``too much
 change'' condition is already instituted. 
@@ -467,12 +463,11 @@ Using the scalar formulation of the problem, the objective function is
 calculated by taking the sum of square difference between the initial
 homography estimates and the optimized homography estimates. 
 
-\[\sum_i \sum_{j, k} ((H_{i, i + 1})_{j, k} - (H_{i, i + 1}^{\textnormal{optimized}})_{j, k})^2\] 
+\[\sum_i \sum_{j, k} ((H_{i, i + 1})_{j, k} - (H_{i, i + 1}^{*})_{j, k})^2\] 
 
 The variables given to the optimizer are the 8 parameters in each of the
 matrices $H_{i, i + 1}$. The values of the $H_{1, n}$ matrix are used as
-initial estimates. The optimizer will yield $n$ new homography matrices $H_{i,
-i + 1}^{\textnormal{optimized}}$. 
+initial estimates. The optimizer will yield $n$ new homography matrices $H_{i, i + 1}^{*}$. 
 
 \subsubsection{Constraints}
 
@@ -485,7 +480,7 @@ following constraints:
 calculated using the optimized homographies is the same as the closed-loop
 homography $H_{1, n}$ is zero.
 
-\[\sum_{j, k} ((H_{1, n})_{j, k} - (H_{1, n}^{\textnormal{optimized}})_{j, k})^2\] 
+\[\sum_{j, k} ((H_{1, n})_{j, k} - (H_{1, n}^{*})_{j, k})^2\] 
 
 The potential problem with this constraint is that it might be too strict - it
 says that there must be no difference between the closed-loop homography and
